@@ -94,3 +94,27 @@ select { appearance: none; }
 @keyframes ping-ring { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; } }
 .ping-ring { animation: ping-ring 1.8s ease-out infinite; will-change: transform, opacity; }
 @media (prefers-reduced-motion: reduce) { .scan-line, .ping-ring { animation: none; display: none; } }
+
+/* ---- Command Mode module scene (components/command/ModuleScene.tsx) ---- */
+.fan-spin { transform-box: fill-box; transform-origin: center; animation: fan-spin var(--fan-dur, 1s) linear infinite; }
+@keyframes fan-spin { to { transform: rotate(360deg); } }
+.air-stream { animation: air-stream var(--air-dur, 2s) linear infinite; }
+@keyframes air-stream { from { transform: translateX(-60px); opacity: 0; } 15% { opacity: var(--air-op, 0.5); } 85% { opacity: var(--air-op, 0.5); } to { transform: translateX(520px); opacity: 0; } }
+.ember { animation: ember var(--ember-dur, 2.4s) ease-out infinite; }
+@keyframes ember { from { transform: translate(0, 0) scale(1); opacity: 0.95; } to { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; } }
+.co2-puff { animation: co2-puff 1.6s ease-out infinite; }
+@keyframes co2-puff { from { transform: translate(0, 0) scale(0.3); opacity: 0.85; } to { transform: translate(var(--dx), var(--dy)) scale(2.2); opacity: 0; } }
+.alarm-wash { animation: alarm-wash 1.2s ease-in-out infinite; }
+@keyframes alarm-wash { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.9; } }
+.alarm-strobe { animation: alarm-strobe 1.2s steps(2, jump-none) infinite; }
+@keyframes alarm-strobe { 0%, 100% { fill: #ff3b30; } 50% { fill: #5a0f0b; } }
+.scene-shake { animation: scene-shake 0.45s ease-in-out; }
+@keyframes scene-shake { 0%, 100% { transform: none; } 20% { transform: translate(-6px, 2px); } 40% { transform: translate(5px, -3px); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, -1px); } }
+.hotspot-ring { animation: hotspot-ring 1.4s ease-out infinite; }
+@keyframes hotspot-ring { 0% { transform: scale(0.8); opacity: 0.9; } 100% { transform: scale(1.8); opacity: 0; } }
+.led-blink { animation: twinkle 1.8s ease-in-out infinite; }
+.crew-float { animation: crew-float 4s ease-in-out infinite; }
+@keyframes crew-float { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .fan-spin, .air-stream, .ember, .co2-puff, .alarm-wash, .alarm-strobe, .scene-shake, .hotspot-ring, .led-blink, .crew-float { animation: none; }
+}

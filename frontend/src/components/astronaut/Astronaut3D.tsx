@@ -13,7 +13,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 export type Mood = "idle" | "wave" | "thinking" | "talking";
 
 /** Studio reflections generated in code (no HDRI download) — this is what makes the visor and suit look real. */
-function Environment() {
+export function Environment() {
   const { gl, scene } = useThree();
   useEffect(() => {
     const pmrem = new THREE.PMREMGenerator(gl);
@@ -62,7 +62,7 @@ function Arm({ side, shoulder, elbow, m }: {
   );
 }
 
-function Suit({ mood, reduced, cursor }: { mood: Mood; reduced: boolean; cursor: React.MutableRefObject<{ x: number; y: number }> }) {
+export function Suit({ mood, reduced, cursor }: { mood: Mood; reduced: boolean; cursor: React.MutableRefObject<{ x: number; y: number }> }) {
   const m = useMaterials();
   const root = useRef<THREE.Group>(null);
   const body = useRef<THREE.Group>(null);

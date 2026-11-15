@@ -1,7 +1,7 @@
 // Fetch wrapper (05 §1): base "/api", AbortController support, error-envelope parsing, boundary shape check (R-16).
 // Every failure is normalised to ApiErrorBody so panels have one error shape to render.
 import type {
-  ApiErrorBody, AskRequest, AskResponse, Compare, CompareRequest, Health, Heatmap, HeatmapRequest,
+  AdviseRequest, AdviseResponse, ApiErrorBody, AskRequest, AskResponse, Compare, CompareRequest, Health, Heatmap, HeatmapRequest,
   InsightsResponse, Meta, Passport, Prediction, RunsResponse, Scenario,
 } from "../types";
 
@@ -71,6 +71,8 @@ export const api = {
     request<Heatmap>("/heatmap", { method: "POST", body, signal, check: has("risk", "o2_values", "airflow_values") }),
   compare: (body: CompareRequest, signal?: AbortSignal) =>
     request<Compare>("/compare", { method: "POST", body, signal, check: has("microgravity", "earth") }),
+  advise: (body: AdviseRequest, signal?: AbortSignal) =>
+    request<AdviseResponse>("/advise", { method: "POST", body, signal, check: has("recommended_action_id", "justification") }),
   passport: (body: Omit<Scenario, "material">, signal?: AbortSignal) =>
     request<Passport>("/passport", { method: "POST", body, signal, check: has("entries", "conditions") }),
   insights: (scenario: Scenario, signal?: AbortSignal) =>

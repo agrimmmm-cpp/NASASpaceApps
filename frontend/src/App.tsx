@@ -14,19 +14,23 @@ import { Experiments, RunDrawer } from "./components/sections/Experiments";
 import { AstronautChat } from "./components/astronaut/AstronautChat";
 import { AboutModal } from "./components/AboutModal";
 import { MissionReport, printReport } from "./components/MissionReport";
+import { CommandMode } from "./components/command/CommandMode";
+import { CommandTeaser } from "./components/command/CommandTeaser";
 
 export default function App() {
   const init = useStore((s) => s.init);
   const meta = useStore((s) => s.meta);
   const retry = useStore((s) => s.retry);
+  const mode = useStore((s) => s.mode);
   useEffect(() => { void init(); }, [init]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [mode]);
 
   return (
     <div className="app-root relative min-h-screen">
       <Starfield />
       <Header />
       <div className="h-20" />
-      <TelemetryBar />
+      {mode === "explore" && <TelemetryBar />}
       {meta.status !== "ready" && (
         <div className="num relative z-40 border-b border-white/10 bg-[#070B14]/90 px-6 py-2 text-center text-[13px]">
           {meta.status === "error" ? (
@@ -37,6 +41,9 @@ export default function App() {
           ) : <span className="text-dim">Connecting to mission server…</span>}
         </div>
       )}
+      {mode === "command" ? (
+        <main className="relative z-10"><ErrorBoundary name="command"><CommandMode /></ErrorBoundary></main>
+      ) : (
       <main className="relative z-10">
         {/* each section is isolated (I-22) */}
         <ErrorBoundary name="hero"><Hero /></ErrorBoundary>
@@ -46,7 +53,9 @@ export default function App() {
         <ErrorBoundary name="compare"><Compare /></ErrorBoundary>
         <ErrorBoundary name="passport"><Passport /></ErrorBoundary>
         <ErrorBoundary name="experiments"><Experiments /></ErrorBoundary>
+        <ErrorBoundary name="command-teaser" fallback={null}><CommandTeaser /></ErrorBoundary>
       </main>
+      )}
       <ErrorBoundary name="astronaut-chat" fallback={null}><AstronautChat /></ErrorBoundary>
       <RunDrawer />
       <ErrorBoundary name="about" fallback={null}><AboutModal /></ErrorBoundary>
