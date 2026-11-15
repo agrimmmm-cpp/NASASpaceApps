@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { Ticker } from "../space/Ticker";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 export type Mood = "idle" | "wave" | "thinking" | "talking";
@@ -189,7 +190,7 @@ export default function Astronaut3D({ mood, size }: { mood: Mood; size: number }
   }, []);
   return (
     <div style={{ width: size, height: size }} aria-hidden>
-      <Canvas dpr={[1, 1.5]} camera={{ fov: 30, position: [0, 0.25, 4.6] }}
+      <Canvas frameloop="demand" dpr={[1, 1.5]} camera={{ fov: 30, position: [0, 0.25, 4.6] }}
         gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}>
         <Environment />
         <ambientLight intensity={0.2} />
@@ -197,6 +198,7 @@ export default function Astronaut3D({ mood, size }: { mood: Mood; size: number }
         <directionalLight position={[-4, 2, -3]} intensity={4} color="#3DD9FF" />
         <pointLight position={[0, -2.2, 2]} intensity={7} distance={6} color="#FF9A1F" />
         <Suit mood={mood} reduced={reduced} cursor={cursor} />
+        <Ticker fps={30} />
       </Canvas>
     </div>
   );

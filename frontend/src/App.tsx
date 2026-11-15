@@ -15,6 +15,7 @@ import { AstronautChat } from "./components/astronaut/AstronautChat";
 import { AboutModal } from "./components/AboutModal";
 import { MissionReport, printReport } from "./components/MissionReport";
 import { CommandMode } from "./components/command/CommandMode";
+import { NasaMissions } from "./components/sections/NasaMissions";
 import { CommandTeaser } from "./components/command/CommandTeaser";
 
 export default function App() {
@@ -53,6 +54,7 @@ export default function App() {
         <ErrorBoundary name="compare"><Compare /></ErrorBoundary>
         <ErrorBoundary name="passport"><Passport /></ErrorBoundary>
         <ErrorBoundary name="experiments"><Experiments /></ErrorBoundary>
+        <ErrorBoundary name="nasa-missions" fallback={null}><NasaMissions /></ErrorBoundary>
         <ErrorBoundary name="command-teaser" fallback={null}><CommandTeaser /></ErrorBoundary>
       </main>
       )}

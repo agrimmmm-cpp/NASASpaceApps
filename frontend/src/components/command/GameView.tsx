@@ -246,6 +246,18 @@ export default function GameView(p: GameViewProps) {
     return () => clearInterval(id);
   }, [game.status, p, finish, sfx]);
 
+  // continuous sound: fire rumble that grows with the damage, and an alarm chirp every few seconds while burning
+  const dmgLevel = Math.round(Math.min(1, game.damage / G.GAME.difficulty[p.diff].failDamage) * 20) / 20;
+  useEffect(() => {
+    sfx.fire(game.status === "running" ? 0.08 + 0.3 * dmgLevel : 0);
+  }, [dmgLevel, game.status, sfx]);
+  useEffect(() => {
+    if (game.status !== "running") return;
+    const id = setInterval(() => sfx.beep(), 2600);
+    return () => clearInterval(id);
+  }, [game.status, sfx]);
+  useEffect(() => () => { sfx.fire(0); sfx.spray(false); }, [sfx]);
+
   // hover state for labels / cursor (polled from the 3D layer)
   useEffect(() => { const id = setInterval(() => setHover(input.current.hovered), 80); return () => clearInterval(id); }, []);
 

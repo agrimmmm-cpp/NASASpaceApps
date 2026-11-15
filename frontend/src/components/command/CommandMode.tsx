@@ -8,6 +8,7 @@ import * as E from "../../sim/engine";
 import * as G from "../../sim/game";
 import { ModuleScene } from "./ModuleScene";
 import { ErrorBoundary } from "../common/ErrorBoundary";
+import { unlockAudio } from "./useSfx";
 import { fmtGravity } from "../../lib/format";
 import { rateLabel } from "../../lib/units";
 
@@ -84,7 +85,7 @@ export function CommandMode() {
 
   const ready = !!live && !!lim && loaded.total > 0 && loaded.done >= loaded.total && !loaded.error && webgl;
   const pickDiff = (d: G.Difficulty) => { setDiff(d); try { localStorage.setItem("command-diff", d); } catch { /* ignore */ } };
-  const ignite = () => { if (ready && live && predict(E.quantize(live, lim!))) setPlaying(live); };
+  const ignite = () => { if (ready && live && predict(E.quantize(live, lim!))) { unlockAudio(); setPlaying(live); } };
   const exitGame = () => { setPlaying(null); bump((n) => n + 1); if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined); };
 
   if (!meta || !lim) return <Shell><p className="text-dim">Connecting to mission server…</p></Shell>;
