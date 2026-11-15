@@ -39,12 +39,14 @@ interface State extends Partial<Scenario> {
   compare: Async<Compare>;
   insights: Async<InsightsResponse>;
   selectedRunId: string | null;
+  chatOpen: boolean;
 
   init(): Promise<void>;
   setScenario(patch: Partial<Scenario>): void;
   applyVehicle(id: string): void;
   retry(slice: Slice | "meta" | "runs"): void;
   selectRun(id: string | null): void;
+  setChatOpen(open: boolean): void;
   setMode(mode: "explore" | "command"): void;
 }
 
@@ -153,6 +155,7 @@ export const useStore = create<State>((set, get) => {
     compare: idle(),
     insights: idle(),
     selectedRunId: null,
+    chatOpen: false,
 
     async init() {
       const st = get().meta.status;
@@ -200,6 +203,7 @@ export const useStore = create<State>((set, get) => {
     },
 
     selectRun: (id) => set({ selectedRunId: id }),
+    setChatOpen: (open) => set({ chatOpen: open }),
     setMode: (mode) => set({ mode }),
   };
 });

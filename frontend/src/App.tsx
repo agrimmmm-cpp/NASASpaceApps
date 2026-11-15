@@ -10,6 +10,7 @@ import { Status } from "./components/sections/Status";
 import { Danger } from "./components/sections/Danger";
 import { Compare } from "./components/sections/Compare";
 import { Experiments, RunDrawer } from "./components/sections/Experiments";
+import { AstronautChat } from "./components/astronaut/AstronautChat";
 
 export default function App() {
   const init = useStore((s) => s.init);
@@ -42,6 +43,7 @@ export default function App() {
         <ErrorBoundary name="compare"><Compare /></ErrorBoundary>
         <ErrorBoundary name="experiments"><Experiments /></ErrorBoundary>
       </main>
+      <ErrorBoundary name="astronaut-chat" fallback={null}><AstronautChat /></ErrorBoundary>
       <RunDrawer />
       <footer className="num relative z-10 border-t border-white/10 bg-[var(--space)]/80 px-6 py-4 text-center text-[12px] text-dim">
         Research and education demo — not operational fire-safety guidance.

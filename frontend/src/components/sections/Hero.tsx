@@ -1,5 +1,5 @@
 // Section 1: question + the glass control card over Earth's limb. Options and ranges all from /api/meta.
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useStore } from "../../store/useStore";
 import { EarthLimb } from "../space/EarthLimb";
 import { ErrorBoundary } from "../common/ErrorBoundary";
@@ -24,11 +24,22 @@ export function Hero() {
   const meta = s.meta.data;
   const r = meta?.ranges;
   const [webgl] = useState(hasWebGL);
+  // hide the "drag / scroll" hint after the first drag on the globe or the first real scroll
+  const [hintSeen, setHintSeen] = useState(false);
+  useEffect(() => {
+    if (hintSeen) return;
+    const done = () => setHintSeen(true);
+    const onScroll = () => { if (window.scrollY > 120) done(); };
+    const onDown = (e: PointerEvent) => { if ((e.target as Element | null)?.closest?.("[aria-label^='3D Earth']")) done(); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pointerdown", onDown);
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("pointerdown", onDown); };
+  }, [hintSeen]);
   return (
     <section id="overview" className="relative flex min-h-[calc(100vh-8rem)] flex-col overflow-hidden pb-10 pt-16">
       {webgl ? (
         <ErrorBoundary name="globe" fallback={<EarthLimb />}>
-          <Suspense fallback={<EarthLimb />}><Globe /></Suspense>
+          <Suspense fallback={<EarthLimb />}><Globe vehicleId={s.vehicle_id} /></Suspense>
         </ErrorBoundary>
       ) : <EarthLimb />}
       {/* fade the globe into the next section — no hard edge */}
@@ -67,10 +78,13 @@ export function Hero() {
             </>
           )}
         </div>
-        <p className="num mt-5 text-center text-[11px] uppercase tracking-[0.2em] text-dim/80">Drag the Earth to spin it</p>
-        <a href="#gravity" className="num pointer-events-auto mt-2 block text-center text-[11px] uppercase tracking-[0.24em] text-dim hover:text-white">
-          Scroll to change gravity ↓
-        </a>
+        {/* Light hint, no box: a dark glow behind the letters keeps it readable over the orbit ring without
+            covering the Earth. Fades out once the visitor has dragged the globe or scrolled. */}
+        <p className={`num mt-6 text-center text-[11px] uppercase tracking-[0.22em] text-white/70 transition-opacity duration-700 ${hintSeen ? "opacity-0" : "opacity-100"}`}
+          style={{ textShadow: "0 0 6px rgba(3,5,11,0.95), 0 0 14px rgba(3,5,11,0.9)" }} aria-hidden={hintSeen}>
+          Drag the Earth to spin it <span className="mx-2 text-white/30">·</span>
+          <a href="#gravity" className={`${hintSeen ? "" : "pointer-events-auto"} hover:text-white`}>Scroll to change gravity ↓</a>
+        </p>
       </div>
     </section>
   );

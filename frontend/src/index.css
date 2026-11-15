@@ -77,3 +77,4 @@ select { appearance: none; }
   html { scroll-behavior: auto; }
   .skeleton, .progress-line, .flame-pulse, .twinkle { animation: none; }
 }
+@keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }

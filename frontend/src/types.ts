@@ -80,6 +80,8 @@ export interface Meta {
       n_train: number | null;
     };
     stub: boolean;
+    /** What the loaded data can support. On mock both are true; on the real NASA data both are false. */
+    capabilities: { flame_temp: boolean; gravity_effect: boolean };
   };
   llm_enabled: boolean;
 }
@@ -117,7 +119,7 @@ export interface Prediction {
   spread_rate_mm_s: number;
   spread_rate_ci: [number, number];
   ci_widened: boolean;
-  flame_temp_k: number;
+  flame_temp_k: number | null; // null when the data has no temperatures (capabilities.flame_temp = false)
   extinction_probability: number; // P(extinguish) — UI shows survival via lib/survival.ts (I-05)
   risk_index: number;
   risk_band: RiskBand;
@@ -146,7 +148,7 @@ export type CompareRequest = Omit<Scenario, "gravity_g">;
 export interface CompareSide {
   gravity_g: number;
   spread_rate_mm_s: number;
-  flame_temp_k: number;
+  flame_temp_k: number | null;
   extinction_probability: number;
   risk_index: number;
 }

@@ -1,23 +1,66 @@
 // Section 2: porthole flame + gravity journey. Marks from meta.gravity_marks placed at true scale;
 // the sparse-data band from meta.model.ci_widen (I-21).
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../../store/useStore";
 import { fmtGravity } from "../../lib/format";
 import { Flame } from "../space/Flame";
 import { Body } from "../space/Body";
 
+const JOURNEY_MS = 4200;
+const prefersReduced = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+/** Visual-only journey from Earth (max g) down to the current setting. Never touches the store, so it fires no
+ *  API calls and doesn't change the preset; the page returns to the real value when it ends. */
+function useJourney(target: number | undefined, from: number) {
+  const [shown, setShown] = useState<number | null>(null);
+  const raf = useRef(0);
+  const stop = useCallback(() => { cancelAnimationFrame(raf.current); setShown(null); }, []);
+  const play = useCallback(() => {
+    if (target === undefined || prefersReduced()) return;
+    cancelAnimationFrame(raf.current);
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / JOURNEY_MS);
+      const e = k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2; // ease-in-out
+      setShown(from + (target - from) * e);
+      if (k < 1) raf.current = requestAnimationFrame(tick);
+      else setShown(null);
+    };
+    raf.current = requestAnimationFrame(tick);
+  }, [target, from]);
+  useEffect(() => () => cancelAnimationFrame(raf.current), []);
+  return { shown, play, stop, playing: shown !== null };
+}
+
 export function Gravity() {
   const meta = useStore((s) => s.meta.data);
-  const g = useStore((s) => s.gravity_g);
+  const realG = useStore((s) => s.gravity_g);
   const risk = useStore((s) => s.prediction.data?.risk_index);
   const setScenario = useStore((s) => s.setScenario);
-  if (!meta || g === undefined) return <section id="gravity" className="min-h-screen" />;
+  const section = useRef<HTMLElement>(null);
+  const journey = useJourney(realG, meta?.ranges.gravity_g.max ?? 1);
+  const played = useRef(false);
+  // play once, the first time the section is mostly on screen
+  useEffect(() => {
+    const el = section.current;
+    if (!el || realG === undefined) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !played.current) { played.current = true; journey.play(); }
+    }, { threshold: 0.45 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [realG === undefined, journey.play]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!meta || realG === undefined) return <section id="gravity" className="min-h-screen" />;
+  const g = journey.shown ?? realG;
+  const set = (v: number) => { journey.stop(); setScenario({ gravity_g: v }); };
   const r = meta.ranges.gravity_g;
   const w = meta.model.ci_widen;
   const pct = (v: number) => ((v - r.min) / (r.max - r.min)) * 100;
   const nearest = meta.gravity_marks.reduce((a, m) => (Math.abs(m.value - g) < Math.abs(a.value - g) ? m : a));
   const sparse = g > w.g_min && g < w.g_max;
+  const noGravityData = meta.model.capabilities.gravity_effect === false;
   return (
-    <section id="gravity" className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-24 text-center md:px-12">
+    <section id="gravity" ref={section} className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-24 text-center md:px-12">
       <span className="eyebrow text-cool">Gravity</span>
       <h2 className="mt-3 font-space text-4xl font-bold tracking-tight text-white md:text-5xl">No gravity, no rising flame</h2>
       <p className="mt-4 max-w-3xl text-[17px] leading-relaxed text-dim">
@@ -54,7 +97,7 @@ export function Gravity() {
           {meta.gravity_marks.map((m) => {
             const p = pct(m.value);
             return (
-              <button key={m.value} onClick={() => setScenario({ gravity_g: m.value })}
+              <button key={m.value} onClick={() => set(m.value)}
                 className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-2" style={{ left: `${p}%` }}
                 aria-label={`Set gravity to ${m.value} g (${m.label})`}>
                 <Body label={m.label} size={88} active={m === nearest && Math.abs(m.value - g) < 0.005} />
@@ -64,9 +107,21 @@ export function Gravity() {
           })}
         </div>
         <input type="range" aria-label="Gravity" className="mt-8 w-full" min={r.min} max={r.max} step={r.step} value={g}
-          onChange={(e) => setScenario({ gravity_g: Number(e.target.value) })} />
+          onPointerDown={journey.stop} onChange={(e) => set(Number(e.target.value))} />
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <button onClick={journey.playing ? journey.stop : journey.play}
+            className="num rounded-full border border-cool/50 px-4 py-1.5 text-[12px] font-semibold uppercase tracking-wider text-cool hover:bg-cool/10">
+            {journey.playing ? "■ Stop" : "▶ Replay Earth → orbit"}
+          </button>
+          {journey.playing && <span className="num text-[12px] text-dim">illustration — your setting returns at the end</span>}
+        </div>
+        {noGravityData && (
+          <p className="mt-4 rounded-lg border border-[#FFB873]/40 bg-[#FFB873]/10 px-4 py-2 text-[13px] text-[#FFB873]">
+            The loaded data only has microgravity runs, so predictions don't change with gravity. The flame above is an illustration of the physics.
+          </p>
+        )}
         <p className="mt-3 text-[13px] text-dim">
-          {fmtGravity(g)}{sparse && <span className="text-[#FFB873]"> · between {w.g_min} and {w.g_max} g there are few experiments, so the uncertainty band is widened ×{w.factor}</span>}
+          {fmtGravity(realG)}{sparse && !noGravityData && !journey.playing && <span className="text-[#FFB873]"> · between {w.g_min} and {w.g_max} g there are few experiments, so the uncertainty band is widened ×{w.factor}</span>}
         </p>
       </div>
     </section>

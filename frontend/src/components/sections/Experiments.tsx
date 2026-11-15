@@ -1,9 +1,9 @@
 // Section 6: experiment scatter (runs) + insight feed + Ask the Fire Lab. Run chips open the run drawer.
-import { useMemo, useState } from "react";
-import { useStore, scenarioOf } from "../../store/useStore";
-import { api, ApiFailure } from "../../api/client";
-import { PanelShell, ErrorChip } from "../common/PanelShell";
-import type { AskResponse, Meta, Prediction, Run, RunsResponse } from "../../types";
+import { useMemo } from "react";
+import { useStore } from "../../store/useStore";
+import { PanelShell } from "../common/PanelShell";
+import { RunChip, SourceTags } from "../common/RunChip";
+import type { Meta, Prediction, Run, RunsResponse } from "../../types";
 
 // Colors for experiments are assigned by position in meta.experiments — no experiment names hard-coded.
 const PALETTE = ["#3DD9FF", "#FFB873", "#B48CFF", "#7CE38B", "#FF6A8A", "#FFE066", "#8AB4FF", "#FF9A1F"];
@@ -18,8 +18,13 @@ function Marker({ x, y, g, color }: { x: number; y: number; g: number; color: st
 
 function Scatter({ data, meta, pred, onPick }: { data: RunsResponse; meta: Meta; pred: Prediction | null; onPick: (id: string) => void }) {
   const W = 560, H = 320, P = 36;
-  const shown = useMemo(() => data.runs.filter((r) => r.spread_rate_mm_s !== null), [data]);
-  const hidden = data.runs.length - shown.length;
+  // Spread means different things per fuel type (solid flame spread vs droplet burning rate), so only plot the
+  // selected material's fuel type on one axis (R-05, R-39).
+  const fuel = meta.materials.find((m) => m.id === pred?.scenario.material)?.fuel_type;
+  const sameFuel = useMemo(() => data.runs.filter((r) => !fuel || r.fuel_type === fuel), [data, fuel]);
+  const shown = useMemo(() => sameFuel.filter((r) => r.spread_rate_mm_s !== null), [sameFuel]);
+  const hidden = sameFuel.length - shown.length;
+  const otherFuel = data.runs.length - sameFuel.length;
   const xr = meta.ranges.o2_percent;
   const ymax = Math.max(0.5, ...shown.map((r) => r.spread_rate_mm_s!), pred?.spread_rate_mm_s ?? 0) * 1.08;
   const X = (v: number) => P + ((v - xr.min) / (xr.max - xr.min)) * (W - 2 * P);
@@ -45,7 +50,7 @@ function Scatter({ data, meta, pred, onPick }: { data: RunsResponse; meta: Meta;
             <Marker x={X(r.o2_percent)} y={Y(r.spread_rate_mm_s!)} g={r.gravity_g} color={expColor(meta, r.experiment)} />
           </g>
         ))}
-        {pred && (
+        {pred && shown.length > 0 && (
           <g>
             <circle cx={X(pred.scenario.o2_percent)} cy={Y(pred.spread_rate_mm_s)} r="9" fill="none" stroke="#fff" strokeWidth="1.5" strokeDasharray="3 2" />
             <circle cx={X(pred.scenario.o2_percent)} cy={Y(pred.spread_rate_mm_s)} r="3" fill="#fff" />
@@ -57,73 +62,10 @@ function Scatter({ data, meta, pred, onPick }: { data: RunsResponse; meta: Meta;
           <span key={e} className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: expColor(meta, e) }} />{e}</span>
         ))}
         <span>● 0 g ◆ partial g ▲ 1 g · ◌ your scenario</span>
+        {fuel && <span>showing {fuel} fuels only{otherFuel > 0 ? ` (${otherFuel} other runs not comparable)` : ""}</span>}
         {hidden > 0 && <span className="text-[#FFB873]">{hidden} runs hidden: missing values</span>}
       </div>
     </div>
-  );
-}
-
-function RunChip({ id }: { id: string }) {
-  const selectRun = useStore((s) => s.selectRun);
-  return (
-    <button onClick={() => selectRun(id)}
-      className="num rounded border border-cool/40 bg-cool/10 px-2 py-0.5 text-[11px] font-semibold text-cool hover:bg-cool/20">{id}</button>
-  );
-}
-
-const EXAMPLES = ["Why is the flame cooler in space?", "Does more airflow put the flame out?"];
-
-function Ask() {
-  const s = useStore();
-  const meta = s.meta.data;
-  const [q, setQ] = useState("");
-  const [pending, setPending] = useState(false);
-  const [res, setRes] = useState<AskResponse | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  async function submit(question = q) {
-    const sc = scenarioOf(s);
-    if (!sc || !question.trim() || pending) return;
-    setPending(true); setErr(null);
-    try { setRes(await api.ask({ question: question.trim(), scenario: sc })); }
-    catch (e) { setErr(e instanceof ApiFailure ? e.body.message : "Request failed"); }
-    finally { setPending(false); }
-  }
-  return (
-    <div className="glass rounded-2xl p-6">
-      <h3 className="num text-[13px] font-semibold uppercase tracking-wider">Ask the Fire Lab</h3>
-      <form className="mt-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-        <input value={q} maxLength={500} onChange={(e) => setQ(e.target.value)} placeholder="Ask about fire in this scenario…"
-          className="h-11 flex-1 rounded-lg border border-white/15 bg-[#0A0E1A] px-3 text-[14px] focus:outline-none focus:ring-1 focus:ring-cool" />
-        <button disabled={pending || !q.trim()} className="num rounded-lg border border-cool px-4 text-[12px] font-semibold uppercase tracking-wider text-cool hover:bg-cool/10 disabled:opacity-40">
-          {pending ? "…" : "Ask"}
-        </button>
-      </form>
-      <div className="num mt-1 text-right text-[11px] text-dim">{q.length}/500</div>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {EXAMPLES.map((x) => (
-          <button key={x} onClick={() => { setQ(x); void submit(x); }} className="rounded-full border border-white/15 px-3 py-1 text-[12px] text-dim hover:text-white">{x}</button>
-        ))}
-      </div>
-      {err && <div className="mt-4"><ErrorChip message={err} onRetry={() => void submit()} /></div>}
-      {res && (
-        <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="text-[14px] leading-relaxed">{res.answer}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {res.cited_run_ids.map((id) => <RunChip key={id} id={id} />)}
-            <Tag gen={res.generated_by} mock={meta?.data_source === "mock"} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Tag({ gen, mock }: { gen: "llm" | "template"; mock: boolean }) {
-  return (
-    <span className="ml-auto flex gap-1.5">
-      <span className="num rounded border border-white/20 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-dim">{gen === "llm" ? "AI" : "Template"}</span>
-      {mock && <span className="num rounded border border-dashed border-mock px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-mock">Mock</span>}
-    </span>
   );
 }
 
@@ -153,14 +95,22 @@ export function Experiments() {
                       <p className="text-[14px] leading-relaxed">{x.text}</p>
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         {x.cited_run_ids.map((id) => <RunChip key={id} id={id} />)}
-                        <Tag gen={i.generated_by} mock={i.data_source === "mock"} />
+                        <SourceTags gen={i.generated_by} mock={i.data_source === "mock"} />
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </PanelShell>
-            <Ask />
+            <button onClick={() => s.setChatOpen(true)}
+              className="glass group flex items-center gap-4 rounded-2xl p-5 text-left transition hover:border-cool/50">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-cool/40 bg-cool/10 text-2xl" aria-hidden>🧑‍🚀</span>
+              <span>
+                <span className="block font-space text-lg font-semibold text-white">Ask Commander Nova</span>
+                <span className="block text-[13px] text-dim">Our astronaut answers questions about this scenario, citing the experiment runs.</span>
+              </span>
+              <span className="num ml-auto text-cool transition group-hover:translate-x-1" aria-hidden>→</span>
+            </button>
           </div>
         </div>
       </div>
