@@ -7,6 +7,7 @@ import { survivalProbability } from "../../lib/survival";
 import { PanelShell } from "../common/PanelShell";
 import { NumberTicker } from "../common/NumberTicker";
 import { rateLabel } from "../../lib/units";
+import { printReport } from "../MissionReport";
 import type { Meta, Prediction } from "../../types";
 
 function Dial({ p, meta }: { p: Prediction; meta: Meta | null }) {
@@ -65,6 +66,10 @@ export function Status() {
           <p className="mx-auto mt-3 max-w-xl text-[17px] text-dim">
             Predicted from {meta ? `${meta.n_runs} ` : ""}{meta?.data_source === "nasa" ? "NASA experiment runs" : "mock experiment runs"}.
           </p>
+          <button onClick={printReport}
+            className="num mt-5 inline-flex items-center gap-2 rounded-full border border-cool/50 bg-cool/10 px-4 py-2 text-[12px] font-semibold uppercase tracking-wider text-cool hover:bg-cool/20">
+            ⬇ Download fire-safety report
+          </button>
         </div>
         <PanelShell title="Fire status" state={state} onRetry={() => retry("prediction")} bare
           skeleton={<div className="grid gap-6 lg:grid-cols-12"><div className="skeleton h-80 lg:col-span-5" /><div className="skeleton h-80 lg:col-span-7" /></div>}>

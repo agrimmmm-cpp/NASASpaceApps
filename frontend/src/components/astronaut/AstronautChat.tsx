@@ -9,6 +9,7 @@ import { RunChip, SourceTags } from "../common/RunChip";
 import type { AskResponse } from "../../types";
 import type { Mood } from "./Astronaut3D";
 import { GREETING as GREET_BUBBLE, usePeek } from "./usePeek";
+import { useVoice } from "./useVoice";
 
 const Astronaut3D = lazy(() => import("./Astronaut3D"));
 const NAME = "Commander Nova";
@@ -44,6 +45,20 @@ function Typewriter({ text, onDone }: { text: string; onDone?: () => void }) {
   return <>{words.slice(0, n).join("")}{n < words.length && <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-cool align-middle" />}</>;
 }
 
+/** Per-message "Read aloud" / "Stop" button. */
+function ReadAloud({ id, text, voice }: { id: string; text: string; voice: ReturnType<typeof useVoice> }) {
+  if (!voice.canSpeak) return null;
+  const playing = voice.speakingId === id;
+  const preparing = voice.preparingId === id;
+  return (
+    <button onClick={() => (playing || preparing ? voice.stop() : void voice.speak(text, { id }))}
+      title={voice.voiceName ? `Voice: ${voice.voiceName}` : "Read this answer aloud"}
+      className={`num mt-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] ${playing ? "border-cool bg-cool/15 text-cool" : "border-white/15 text-dim hover:text-white"}`}>
+      {preparing ? "⏳ Preparing voice…" : playing ? "■ Stop" : "🔊 Read aloud"}
+    </button>
+  );
+}
+
 function Nova({ mood, size }: { mood: Mood; size: number }) {
   const fallback = (
     <div style={{ width: size, height: size }} className="flex items-center justify-center text-5xl" aria-hidden>🧑‍🚀</div>
@@ -65,6 +80,10 @@ export function AstronautChat() {
   const [q, setQ] = useState("");
   const [pending, setPending] = useState(false);
   const [typing, setTyping] = useState<number | null>(null); // index of the message being typed out
+  const voice = useVoice();
+  const talkingAloud = voice.speaking || voice.preparingId !== null;
+  // closing the chat in any way (✕, Escape, the Experiments card toggling) silences Nova
+  useEffect(() => { if (!open) voice.stop(); }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const [greetTyped, setGreetTyped] = useState(false);
   const list = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -91,7 +110,11 @@ export function AstronautChat() {
     setQ("");
     setMsgs((m) => [...m, { role: "user", text }]);
     const think = reducedMotion() ? 0 : MIN_THINK_MS;
-    const reply = (msg: Msg) => setMsgs((m) => { setTyping(m.length); return [...m, msg]; });
+    const reply = (msg: Msg) => {
+      setMsgs((m) => { setTyping(m.length); return [...m, msg]; });
+      void voice.speak(msg.role === "nova" ? msg.res.answer : msg.role === "local" ? msg.text : "", { auto: true });
+    };
+    voice.stop();
     setPending(true);
     if (GREETING.test(text)) {
       const thanks = /thank|thx|ty/i.test(text);
@@ -114,17 +137,18 @@ export function AstronautChat() {
     }
   }
 
-  const mood: Mood = pending ? "thinking" : typing !== null ? "talking" : peek.bubble || hover ? "wave" : "idle";
+  const mood: Mood = pending ? "thinking" : typing !== null || voice.speaking ? "talking" : peek.bubble || hover ? "wave" : "idle";
   const doneTyping = useCallback(() => setTyping(null), []);
   const mock = meta?.data_source === "mock";
 
   if (!open) {
     return (
-      <div className="fixed bottom-4 right-4 z-[55] flex items-end gap-2 transition-transform duration-700 ease-[cubic-bezier(.34,1.56,.64,1)]"
+      <div className="fixed bottom-4 right-4 z-[55] flex flex-col items-end gap-1 transition-transform duration-700 ease-[cubic-bezier(.34,1.56,.64,1)]"
         // tucked: slide most of the way off the right edge, tilted, still peeking
-        style={{ transform: peek.out || hover ? "none" : "translateX(64%) rotate(-14deg)" }}>
+        // tucked: mostly behind the right edge with the helmet still peeking; never tucked while Nova is speaking
+        style={{ transform: peek.out || hover || talkingAloud ? "none" : "translateX(48%) rotate(-12deg)" }}>
         {(peek.bubble || hover) && (peek.out || hover) && (
-          <div key={peek.bubble ?? "hover"} className="glass mb-16 max-w-[230px] rounded-2xl rounded-br-sm px-4 py-3 text-[14px] leading-snug shadow-2xl [animation:fadein_250ms_ease]">
+          <div key={peek.bubble ?? "hover"} className="glass mr-10 max-w-[230px] rounded-2xl rounded-br-sm px-4 py-3 text-[14px] leading-snug shadow-2xl [animation:fadein_250ms_ease]">
             {peek.bubble === GREET_BUBBLE || (!peek.bubble && hover) ? (
               <>
                 <b className="text-white"><Typewriter text={`Hi! 👋 I'm ${NAME.split(" ")[1]}.`} onDone={() => setGreetTyped(true)} /></b>{" "}
@@ -159,7 +183,14 @@ export function AstronautChat() {
             {pending ? "Checking the experiment logs…" : `Answers from ${meta?.n_runs ?? "the"} ${meta?.data_source === "nasa" ? "NASA" : "mock"} runs for your current scenario`}
           </p>
         </div>
-        <button onClick={() => setOpen(false)} aria-label="Close chat"
+        {voice.canSpeak && (
+          <button onClick={voice.toggle} aria-pressed={voice.on}
+            title={voice.on ? "Auto-read is on: Nova reads every answer aloud" : "Auto-read is off: use Read aloud on any message"}
+            className={`num absolute right-16 top-3 rounded-full border px-2.5 py-1 text-[11px] ${voice.on ? "border-cool/60 text-cool" : "border-white/15 text-dim hover:text-white"}`}>
+            {voice.on ? "🔊 Auto-read" : "🔇 Auto-read"}
+          </button>
+        )}
+        <button onClick={() => { voice.stop(); setOpen(false); }} aria-label="Close chat"
           className="num absolute right-3 top-3 rounded-full border border-white/15 px-2.5 py-1 text-[12px] text-dim hover:text-white">✕</button>
       </header>
 
@@ -184,6 +215,7 @@ export function AstronautChat() {
           ) : m.role === "local" ? (
             <div key={i} className="w-fit max-w-[92%] rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.06] px-4 py-3 text-[14px] leading-relaxed">
               {typing === i ? <Typewriter text={m.text} onDone={doneTyping} /> : m.text}
+              {typing !== i && <ReadAloud id={`m${i}`} text={m.text} voice={voice} />}
             </div>
           ) : m.role === "nova" ? (
             <div key={i} className="w-fit max-w-[92%] rounded-2xl rounded-tl-sm border border-white/10 bg-white/[0.06] px-4 py-3">
@@ -192,6 +224,7 @@ export function AstronautChat() {
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5 [animation:fadein_300ms_ease]">
                   {m.res.cited_run_ids.map((id) => <RunChip key={id} id={id} />)}
                   <SourceTags gen={m.res.generated_by} mock={m.res.data_source === "mock"} />
+                  <ReadAloud id={`m${i}`} text={m.res.answer} voice={voice} />
                 </div>
               )}
             </div>
@@ -215,8 +248,15 @@ export function AstronautChat() {
 
       <form className="border-t border-white/10 p-3" onSubmit={(e) => { e.preventDefault(); void ask(q); }}>
         <div className="flex gap-2">
-          <input ref={input} value={q} maxLength={MAX} onChange={(e) => setQ(e.target.value)} placeholder={`Ask ${NAME.split(" ")[1]}…`}
+          <input ref={input} value={q} maxLength={MAX} onChange={(e) => setQ(e.target.value)} placeholder={voice.listening ? "Listening… ask your question" : `Ask ${NAME.split(" ")[1]}…`}
             className="h-11 min-w-0 flex-1 rounded-xl border border-white/15 bg-[#0A0E1A] px-3 text-[14px] focus:outline-none focus:ring-1 focus:ring-cool" />
+          {voice.canListen && (
+            <button type="button" onClick={() => voice.listen((t) => void ask(t))} disabled={pending || typing !== null}
+              aria-label={voice.listening ? "Stop listening" : "Ask by voice"} title="Ask by voice"
+              className={`rounded-xl border px-3 text-[16px] disabled:opacity-40 ${voice.listening ? "animate-pulse border-danger bg-danger/20 text-white" : "border-white/15 text-dim hover:text-white"}`}>
+              🎤
+            </button>
+          )}
           <button disabled={pending || typing !== null || !q.trim()}
             className="num rounded-xl border border-cool bg-cool/10 px-4 text-[12px] font-semibold uppercase tracking-wider text-cool hover:bg-cool/20 disabled:opacity-40">
             Send

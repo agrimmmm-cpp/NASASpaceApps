@@ -2,6 +2,7 @@
 // the sparse-data band from meta.model.ci_widen (I-21).
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../../store/useStore";
+import candlePhoto from "../../assets/nasa/candle-microgravity.jpg";
 import { fmtGravity } from "../../lib/format";
 import { Flame } from "../space/Flame";
 import { Body } from "../space/Body";
@@ -59,70 +60,79 @@ export function Gravity() {
   const nearest = meta.gravity_marks.reduce((a, m) => (Math.abs(m.value - g) < Math.abs(a.value - g) ? m : a));
   const sparse = g > w.g_min && g < w.g_max;
   const noGravityData = meta.model.capabilities.gravity_effect === false;
+  // Centred and compact: heading, then the flame (with the real NASA photo beside it), then the wide gravity track
+  // right underneath — all in one screen, so dragging gravity morphs the flame in view.
   return (
-    <section id="gravity" ref={section} className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-24 text-center md:px-12">
+    <section id="gravity" ref={section} className="relative z-10 flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-6 py-10 text-center md:px-12">
       <span className="eyebrow text-cool">Gravity</span>
-      <h2 className="mt-3 font-space text-4xl font-bold tracking-tight text-white md:text-5xl">No gravity, no rising flame</h2>
-      <p className="mt-4 max-w-3xl text-[17px] leading-relaxed text-dim">
-        On Earth, hot gas rises and pulls fresh air in, so flames stretch upward. In microgravity nothing rises:
-        oxygen only drifts in slowly, and the flame becomes a dim blue sphere.
+      <h2 className="mt-2 font-space text-3xl font-bold tracking-tight text-white md:text-4xl">No gravity, no rising flame</h2>
+      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-dim">
+        On Earth, hot gas rises and pulls in fresh air, so flames stretch upward. In microgravity nothing rises — the flame becomes a dim blue sphere.
       </p>
 
-      <div className="porthole-rim relative mt-12 flex h-72 w-72 items-center justify-center rounded-full border border-cool/40 bg-gradient-to-tr from-[#1B2234] via-[#0A0D17] to-[#252E46] p-2.5">
-        {["top-2 left-1/2 -translate-x-1/2", "bottom-2 left-1/2 -translate-x-1/2", "left-2 top-1/2 -translate-y-1/2", "right-2 top-1/2 -translate-y-1/2"].map((p) => (
-          <span key={p} className={`absolute h-2 w-2 rounded-full bg-[#8E9EB8] ${p}`} />
-        ))}
-        <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border border-cool/30 bg-[#020409]">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-x-0 top-1/2 h-px bg-cool/20" />
-            <div className="absolute inset-y-0 left-1/2 w-px bg-cool/20" />
-            <div className="absolute inset-8 rounded-full border border-dashed border-cool/20" />
-            <span className="num absolute left-1/2 top-4 -translate-x-1/2 whitespace-nowrap text-[9px] uppercase tracking-widest text-cool/80">Cam 02 · Porthole</span>
-            <span className="num absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] uppercase tracking-widest text-dim">{fmtGravity(g)}</span>
+      <div className="relative mt-6">
+        <div className="porthole-rim relative flex h-56 w-56 items-center justify-center rounded-full border border-cool/40 bg-gradient-to-tr from-[#1B2234] via-[#0A0D17] to-[#252E46] p-2.5">
+          {["top-2 left-1/2 -translate-x-1/2", "bottom-2 left-1/2 -translate-x-1/2", "left-2 top-1/2 -translate-y-1/2", "right-2 top-1/2 -translate-y-1/2"].map((p) => (
+            <span key={p} className={`absolute h-2 w-2 rounded-full bg-[#8E9EB8] ${p}`} />
+          ))}
+          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border border-cool/30 bg-[#020409]">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute inset-x-0 top-1/2 h-px bg-cool/20" />
+              <div className="absolute inset-y-0 left-1/2 w-px bg-cool/20" />
+              <div className="absolute inset-7 rounded-full border border-dashed border-cool/20" />
+              <span className="num absolute left-1/2 top-3.5 -translate-x-1/2 whitespace-nowrap text-[9px] uppercase tracking-widest text-cool/80">Cam 02 · Porthole</span>
+              <span className="num absolute bottom-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] uppercase tracking-widest text-dim">{fmtGravity(g)}</span>
+            </div>
+            <Flame gravity={g} intensity={(risk ?? 40) / 100} size={165} />
           </div>
-          <Flame gravity={g} intensity={(risk ?? 40) / 100} size={200} />
         </div>
+        {/* the real thing: a small round "second camera" with NASA's microgravity candle photo (assets/nasa/CREDITS.md).
+            Small on purpose so the porthole stays the hero; hover enlarges it and shows the caption. */}
+        <figure className="group absolute -bottom-1 -right-6 z-10 flex flex-col items-center">
+          <span className="relative block h-[72px] w-[72px] overflow-hidden rounded-full border-2 border-cool/50 bg-black shadow-[0_0_18px_rgba(61,217,255,0.35)] transition-transform duration-300 group-hover:scale-[1.6] group-focus-within:scale-[1.6]">
+            <img src={candlePhoto} alt="Real candle flame in microgravity: a dim blue dome with no rising tip" loading="lazy" className="h-full w-full object-cover" />
+          </span>
+          <figcaption className="num mt-1 whitespace-nowrap text-[9px] uppercase tracking-widest text-cool/80">Cam 01 · NASA</figcaption>
+          <span role="tooltip" className="pointer-events-none absolute left-full top-0 ml-14 w-52 rounded-xl border border-white/10 bg-[#070B14]/95 p-3 text-left text-[12px] leading-snug text-dim opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100">
+            <b className="text-white">The real thing.</b> A candle burning in microgravity: no rising tip, a dim blue dome, very little soot.
+            <span className="num mt-1 block text-[10px] uppercase tracking-wider">Photo: NASA · Candle Flames in Microgravity</span>
+          </span>
+        </figure>
       </div>
 
-      <div className="glass mt-12 w-full max-w-5xl rounded-2xl px-8 pb-6 pt-8 md:px-14">
-        <div className="relative h-36">
-          <div className="absolute inset-x-0 top-11 h-1 rounded bg-white/10" />
-          <div className="absolute top-11 h-1 rounded bg-cool shadow-[0_0_8px_#3DD9FF]" style={{ left: 0, width: `${pct(g)}%` }} />
-          <div className="absolute top-11 h-1 border-t-2 border-dashed border-[#FFB873]/70"
+      <div className="glass mt-6 w-full max-w-4xl rounded-2xl px-12 pb-4 pt-5">
+        <div className="relative h-[92px]">
+          <div className="absolute inset-x-0 top-[30px] h-1 rounded bg-white/10" />
+          <div className="absolute top-[30px] h-1 rounded bg-cool shadow-[0_0_8px_#3DD9FF]" style={{ left: 0, width: `${pct(g)}%` }} />
+          <div className="absolute top-[30px] h-1 border-t-2 border-dashed border-[#FFB873]/70"
             style={{ left: `${pct(w.g_min)}%`, width: `${pct(w.g_max) - pct(w.g_min)}%` }} />
-          <span className="num absolute -top-1 -translate-x-1/2 whitespace-nowrap rounded border border-[#FFB873]/40 bg-[#0A0E1A] px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-[#FFB873]"
-            style={{ left: `${(pct(w.g_min) + pct(w.g_max)) / 2 + 8}%` }}>
-            Sparse data — interpolated
-          </span>
           {meta.gravity_marks.map((m) => {
             const p = pct(m.value);
             return (
               <button key={m.value} onClick={() => set(m.value)}
-                className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-2" style={{ left: `${p}%` }}
+                className="absolute top-0 flex -translate-x-1/2 flex-col items-center gap-1" style={{ left: `${p}%` }}
                 aria-label={`Set gravity to ${m.value} g (${m.label})`}>
-                <Body label={m.label} size={88} active={m === nearest && Math.abs(m.value - g) < 0.005} />
-                <span className="num whitespace-nowrap text-[13px] font-semibold text-white">{m.value} g {m.label}</span>
+                <Body label={m.label} size={60} active={m === nearest && Math.abs(m.value - g) < 0.005} />
+                <span className="num whitespace-nowrap text-[11px] font-semibold leading-tight text-white">{m.value} g</span>
+                <span className="whitespace-nowrap text-[11px] leading-tight text-dim">{m.label}</span>
               </button>
             );
           })}
         </div>
-        <input type="range" aria-label="Gravity" className="mt-8 w-full" min={r.min} max={r.max} step={r.step} value={g}
+        <input type="range" aria-label="Gravity" className="mt-6 w-full" min={r.min} max={r.max} step={r.step} value={g}
           onPointerDown={journey.stop} onChange={(e) => set(Number(e.target.value))} />
-        <div className="mt-3 flex items-center justify-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-left text-[12px] leading-snug text-[#FFB873]">
+            {journey.playing ? "Illustration — your setting returns at the end."
+              : noGravityData ? "Data is microgravity-only: predictions don't change with gravity; the flame illustrates the physics."
+              : sparse ? `${w.g_min}–${w.g_max} g has few experiments: uncertainty widened ×${w.factor}.`
+              : `Dashed: ${w.g_min}–${w.g_max} g is interpolated from sparse data.`}
+          </span>
           <button onClick={journey.playing ? journey.stop : journey.play}
-            className="num rounded-full border border-cool/50 px-4 py-1.5 text-[12px] font-semibold uppercase tracking-wider text-cool hover:bg-cool/10">
+            className="num shrink-0 rounded-full border border-cool/50 px-4 py-1.5 text-[12px] font-semibold uppercase tracking-wider text-cool hover:bg-cool/10">
             {journey.playing ? "■ Stop" : "▶ Replay Earth → orbit"}
           </button>
-          {journey.playing && <span className="num text-[12px] text-dim">illustration — your setting returns at the end</span>}
         </div>
-        {noGravityData && (
-          <p className="mt-4 rounded-lg border border-[#FFB873]/40 bg-[#FFB873]/10 px-4 py-2 text-[13px] text-[#FFB873]">
-            The loaded data only has microgravity runs, so predictions don't change with gravity. The flame above is an illustration of the physics.
-          </p>
-        )}
-        <p className="mt-3 text-[13px] text-dim">
-          {fmtGravity(realG)}{sparse && !noGravityData && !journey.playing && <span className="text-[#FFB873]"> · between {w.g_min} and {w.g_max} g there are few experiments, so the uncertainty band is widened ×{w.factor}</span>}
-        </p>
       </div>
     </section>
   );
