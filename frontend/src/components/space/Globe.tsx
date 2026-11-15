@@ -1,6 +1,7 @@
 // Interactive 3D Earth (three.js). Real NASA Blue Marble day map, city lights on the night side,
 // ocean glint, and an atmosphere glow. Slowly rotates, tilts toward the cursor, drag to spin (with inertia).
 // Loaded lazily from Hero; if WebGL is missing or anything throws, Hero falls back to the CSS EarthLimb.
+import { Ticker } from "./Ticker";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
@@ -231,8 +232,9 @@ export default function Globe({ radius = 4.6, y = -4.75, z = -3, vehicleId = nul
     <div ref={wrap} className="absolute inset-0 cursor-grab touch-pan-y" aria-label="3D Earth — drag to rotate"
       role="img"
       onPointerDown={(e) => { Object.assign(ctl.drag, { active: true, x: e.clientX, y: e.clientY, px: 0, py: 0, vx: 0, vy: 0 }); e.currentTarget.style.cursor = "grabbing"; }}>
-      <Canvas frameloop={visible ? "always" : "never"} dpr={[1, 1.5]} camera={{ fov: 35, position: [0, 0, 5] }}
+      <Canvas frameloop={visible ? "demand" : "never"} dpr={[1, 1.5]} camera={{ fov: 35, position: [0, 0, 5] }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}>
+        <Ticker fps={60} />
         <Suspense fallback={null}>
           <Earth ctl={ctl} radius={radius} y={y} z={z} showOrbit={showOrbit} />
           <ambientLight intensity={0.12} />

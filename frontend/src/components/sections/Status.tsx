@@ -1,4 +1,5 @@
 // Section 3: risk dial + four stat cards. Every number is what /api/predict returned (I-06).
+import { ConfidenceMeter } from "./ConfidenceMeter";
 import type { ReactNode } from "react";
 import { useStore } from "../../store/useStore";
 import { BAND_COLOR, PLAIN_BAND } from "../../lib/bands";
@@ -110,6 +111,7 @@ export function Status() {
                   color={p.matching_runs === 0 ? "var(--fire)" : "var(--cool)"} tint={p.matching_runs === 0}
                   foot={p.matching_runs === 0 ? "no similar experiments: extrapolating" : "similar real experiments"} />
               </div>
+              <Reveal className="lg:col-span-12"><ConfidenceMeter p={p} /></Reveal>
             </div>
           )}
         </PanelShell>
