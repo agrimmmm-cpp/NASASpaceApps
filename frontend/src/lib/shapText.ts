@@ -1,7 +1,7 @@
 // 05 §8 — plain-language SHAP rows, built from {feature, contribution} and the current scenario.
 import type { MaterialInfo, Scenario, ShapItem } from "../types";
 
-export interface ShapRow { text: string; contribution: number }
+export interface ShapRow { text: string; label: string; contribution: number }
 
 function phrase(f: ShapItem["feature"], s: Scenario, materials: MaterialInfo[]): string {
   switch (f) {
@@ -23,11 +23,12 @@ export function shapRows(shap: ShapItem[], s: Scenario, materials: MaterialInfo[
   const small = shap.filter((x) => Math.abs(x.contribution) < 0.5);
   const rows: ShapRow[] = big.slice(0, small.length ? 4 : 5).map((x) => ({
     contribution: x.contribution,
+    label: phrase(x.feature, s, materials),
     text: `${phrase(x.feature, s, materials)} is ${x.contribution > 0 ? "increasing" : "decreasing"} risk by ${x.contribution > 0 ? "+" : "−"}${Math.round(Math.abs(x.contribution))}`,
   }));
   const rest = [...big.slice(rows.length), ...small].reduce((a, x) => a + x.contribution, 0);
   if (big.length > rows.length || small.length) {
-    rows.push({ contribution: rest, text: `Other factors ${rest >= 0 ? "+" : "−"}${Math.abs(rest).toFixed(1)}` });
+    rows.push({ contribution: rest, label: "Everything else", text: `Other factors ${rest >= 0 ? "+" : "−"}${Math.abs(rest).toFixed(1)}` });
   }
   return rows;
 }
