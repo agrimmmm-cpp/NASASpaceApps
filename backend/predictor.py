@@ -32,6 +32,8 @@ class Predictor(Protocol):
 class ToyPredictor:
     is_stub = True
     version = "stub"
+    metrics = None
+    trained_at = "1970-01-01T00:00:00Z"
 
     def __init__(self, spread_ref: float = config.SPREAD_REF_DEFAULT_MM_S):
         self.spread_ref = spread_ref

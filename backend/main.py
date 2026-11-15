@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Optional
@@ -11,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import config
 import errors
+import ai
+import model as model_mod
 import services
 from data_loader import load_dataset, records
 from errors import model_not_ready
@@ -33,8 +36,19 @@ def build_state() -> AppState:
     if config.stub_mode():
         st.predictor = ToyPredictor()
         log.warning("STUB_MODE=1: predictions come from the toy surface, not a trained model")
-    # Tier 2: otherwise load/train the gradient-boosting predictor here (background thread) and set st.predictor.
+    else:
+        # Train (or load the cached artifact) off the request path: endpoints answer 503 MODEL_NOT_READY meanwhile.
+        threading.Thread(target=_train_in_background, args=(st,), name="model-train", daemon=True).start()
     return st
+
+
+def _train_in_background(st: AppState) -> None:
+    try:
+        st.predictor = model_mod.load_or_train(st.dataset, st.material_ids)
+        log.info("model ready: %s", st.predictor.version)
+    except Exception as e:  # health stays model_ready=false; the reason is in the logs and /api/health-adjacent state
+        st.model_error = str(e)
+        log.error("MODEL TRAINING FAILED: %s", e)
 
 
 @asynccontextmanager
@@ -70,15 +84,16 @@ def meta(request: Request):
     st = _st(request)
     df, p = st.dataset.df, st.predictor
     metrics = {"n_train": len(df), **{k: None for k in ("spread_r2", "temp_r2", "extinction_auc")}}
-    if st.metrics:
-        metrics = st.metrics
+    if p is not None and getattr(p, "metrics", None):
+        metrics = p.metrics
     return {
         "data_source": st.dataset.source, "n_runs": st.dataset.n_runs,
         "materials": st.materials, "experiments": sorted(df["experiment"].unique().tolist()),
         "vehicles": config.VEHICLES, "ranges": config.RANGES, "gravity_marks": config.GRAVITY_MARKS,
         "risk_bands": config.RISK_BANDS, "grade_bands": config.GRADE_BANDS,
         "model": {
-            "version": p.version if p else "untrained", "trained_at": st.trained_at,
+            "version": p.version if p else "untrained",
+            "trained_at": getattr(p, "trained_at", st.trained_at),
             "spread_ref_mm_s": p.spread_ref if p else config.SPREAD_REF_DEFAULT_MM_S,
             "weights": {"spread": config.W_SPREAD, "survival": config.W_SURVIVAL},
             "critical_length_mm": config.CRITICAL_LENGTH_MM, "ci_widen": config.CI_WIDEN,
@@ -139,9 +154,7 @@ def insights(body: InsightsRequest, request: Request):
     st = _ready(_st(request))
     sc = body.scenario.model_dump()
     services.check_material(st, sc["material"])
-    if not st.predictor.is_stub:
-        raise model_not_ready()  # Tier 3 (retrieval + LLM + templates)
-    return services.stub_insights(st, sc, services.predict_one(st, sc))
+    return ai.insights(st, sc, services.predict_one(st, sc))
 
 
 @app.post("/api/ask", response_model=AskResponse)
@@ -149,9 +162,7 @@ def ask(body: AskRequest, request: Request):
     st = _ready(_st(request))
     sc = body.scenario.model_dump()
     services.check_material(st, sc["material"])
-    if not st.predictor.is_stub:
-        raise model_not_ready()  # Tier 3
-    return services.stub_ask(st, sc, services.predict_one(st, sc))
+    return ai.ask(st, sc, services.predict_one(st, sc), body.question)
 
 
 @app.post("/api/passport", response_model=Passport)
@@ -168,6 +179,4 @@ def advise(body: AdviseRequest, request: Request):
     if bad:
         raise errors.ApiException("VALIDATION_ERROR", f"Unknown action ids: {bad}", 422,
                                   {"field": "options", "allowed": ACTION_IDS})
-    if not st.predictor.is_stub:
-        raise model_not_ready()  # Tier 4
     return services.advise(st, body.scenario.model_dump(), body.state.model_dump(), body.options)

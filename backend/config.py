@@ -66,6 +66,12 @@ GRADE_BANDS = [  # grade = first band where risk < max_risk (Tier 4)
     {"grade": "F", "max_risk": 100.0},
 ]
 
+# ---- model training (docs/04_MODEL_SPEC.md section 3) ---------------------
+MODEL_CODE_VERSION = 1          # bump when features/hyper-parameters change: invalidates cached artifacts
+MIN_TRAIN_ROWS = 30             # per target; below this training raises instead of shipping a toy model
+GB_PARAMS = dict(n_estimators=250, max_depth=3, learning_rate=0.05, subsample=0.8, random_state=RANDOM_STATE)
+CV_FOLDS = 5
+
 # ---- confidence interval (I-15, I-21) ------------------------------------
 CI_QUANTILES = (0.1, 0.9)
 CI_WIDEN = {"g_min": 0.05, "g_max": 0.95, "factor": 1.5}
@@ -93,13 +99,51 @@ CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
 def stub_mode() -> bool:
-    """Read at call time so tests can flip it. Default on until the real model ships (Tier 2)."""
-    return os.getenv("STUB_MODE", "1").strip().lower() in ("1", "true", "yes", "on")
+    """Read at call time so tests can flip it. Default off: the trained model is the default since Tier 2."""
+    return os.getenv("STUB_MODE", "0").strip().lower() in ("1", "true", "yes", "on")
 
 
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
-LLM_TIMEOUT_S = float(os.getenv("LLM_TIMEOUT_S", "8") or 8)
+# ---- LLM (all read at call time so tests / .env edits take effect; the key is never logged, I-12) ----
+LLM_RATE_PER_MIN = 30          # per-process cap on outbound LLM calls; beyond it we answer from templates (R-26)
+LLM_CACHE_TTL_S = 600
+LLM_CACHE_MAX = 256
+LLM_MAX_NOTE_CHARS = 200       # run source_note is untrusted: truncated before it reaches the prompt (R-23)
+DEFAULT_MODELS = {"openai": "gpt-4o-mini", "anthropic": "claude-haiku-5-5"}
+
+
+def _env(name: str, default: str = "") -> str:
+    return (os.getenv(name, default) or "").strip()
+
+
+def llm_api_key() -> str:
+    return _env("LLM_API_KEY")
 
 
 def llm_enabled() -> bool:
-    return bool(os.getenv("LLM_API_KEY", "").strip())
+    return bool(llm_api_key())
+
+
+def llm_provider() -> str:
+    p = _env("LLM_PROVIDER", "openai").lower()
+    return p if p in DEFAULT_MODELS else "openai"
+
+
+def llm_model() -> str:
+    return _env("LLM_MODEL") or DEFAULT_MODELS[llm_provider()]
+
+
+def llm_base_url() -> str:
+    return _env("LLM_BASE_URL").rstrip("/")
+
+
+def llm_reasoning_effort() -> str:
+    """Optional OpenAI-style `reasoning_effort` (none|minimal|low|medium|high). Lets thinking models (Gemini 3/4, gpt-oss) answer fast."""
+    v = _env("LLM_REASONING_EFFORT").lower()
+    return v if v in ("none", "minimal", "low", "medium", "high") else ""
+
+
+def llm_timeout_s() -> float:
+    try:
+        return float(_env("LLM_TIMEOUT_S", "8") or 8)
+    except ValueError:
+        return 8.0
