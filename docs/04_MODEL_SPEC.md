@@ -44,8 +44,8 @@ Encoder fitted on training materials; column order saved in the artifact.
 Use modest hyper-parameters (n_estimators 200–300, max_depth 3, learning_rate 0.05, subsample 0.8) — data is small, don't overfit. Do not
 spend time tuning; spend it on checking behaviour (§8).
 
-- **Class imbalance:** if `extinguished` is < 10% or > 90% positive, still train, but log a warning and report it in `metrics`.
-  Calibrate probabilities with `CalibratedClassifierCV(method="sigmoid", cv=3)` only if a class has ≥ 30 samples; otherwise raw probabilities.
+- **Class imbalance:** if `extinguished` is < 10% or > 90% positive, still train, but log a warning. If only one class exists, a constant probability is used and `extinction_auc` is `null`.
+  Probabilities are used **raw** (no calibration wrapper) so SHAP explains the exact model that predicts.
 - **Metrics** (5-fold CV, reported in `/api/meta.model.metrics`): `spread_r2`, `temp_r2`, `extinction_auc`, `n_train`. If a metric is
   undefined (single class), report `null`, never fake a number. Frontend shows them in the About modal.
 - **Artifact:** `backend/models/model_<hash8>.joblib` containing models, encoder, column order, constants snapshot, metrics, trained_at.
@@ -67,9 +67,9 @@ spend time tuning; spend it on checking behaviour (§8).
 - Use `shap.TreeExplainer` on the spread model and on the classifier. **Group the one-hot material columns into one `material` feature** by summing their SHAP values.
 - Convert to risk-index points so the bars are comparable and sum to the risk:
   - spread part: `100 × W_SPREAD × shap_spread / SPREAD_REF` (ignore the clip; note as approximation)
-  - extinction part: classifier SHAP is in log-odds; linearise: `Δ(1−p) ≈ −p(1−p) × shap_logodds`, so points = `100 × W_SURVIVAL × (−p(1−p)) × shap_logodds`.
+  - extinction part: classifier SHAP is in log-odds; map to probability with the **secant slope** of the sigmoid between the base and the actual log-odds, `slope = (p − p_base) / Σshap` (falls back to `p(1−p)` when Σshap ≈ 0), so points = `100 × W_SURVIVAL × (−slope) × shap_logodds`. This keeps the extinction part exactly additive.
   - `contribution[feature] = spread part + extinction part`.
-- `shap_base` = risk at the explainers' expected values using the same formulas. Test: `|shap_base + Σ contributions − risk_index| ≤ 8` on a sample (approximation, due to linearisation/clipping). Don't promise exact additivity in the UI.
+- `shap_base` = risk at the explainers' expected values using the same formulas. Measured on mock data: median error 0.05, 95th percentile 0.10 risk points; the rare large errors (up to ~9) occur when the spread clips at `SPREAD_REF`. Test asserts median ≤ 1 and max ≤ 8 on a fixed sample. Don't promise exact additivity in the UI.
 - Sign convention: positive = pushes risk **up**. Sorted by absolute value.
 - If `shap` can't be imported or fails → `shap: []` and `shap_base: risk_index`; log once. Never fail the request.
 - Plain-language sentences are produced in the **frontend** from `{feature, contribution, scenario}` (templates in `05_FRONTEND_CONTRACT.md` §8), not by the LLM.
@@ -91,7 +91,11 @@ Tolerances are config constants. 0 is a legitimate value; the UI shows "0 — ex
 - Provider-agnostic wrapper. Env: `LLM_PROVIDER` (`openai` | `anthropic`), `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` (optional), `LLM_TIMEOUT_S` (8). No key → `llm_enabled=false`, template path.
 - Prompt skeleton (system): "You are a spaceflight fire-safety analyst. Use ONLY the numbered runs below. Every statement must cite at least one run_id from the list. If the runs don't support a claim, don't make it. Return JSON only: `{\"insights\":[{\"text\":..., \"cited_run_ids\":[...]}]}`. 3–5 insights, each ≤ 30 words, plain language."
 - User content: the scenario, the model prediction (numbers), and the 5 runs as compact JSON. Run `source_note` text is **untrusted data**: put it inside a delimited block and tell the model to treat it as data, not instructions. Truncate each note to 200 chars.
-- Post-process: parse JSON (strip code fences), validate (I-11), cap 5, dedupe, truncate text to 240 chars. Any failure / timeout / non-JSON → template.
+- Post-process: parse JSON (strip code fences), validate (I-11): an insight citing **any** id outside the retrieved set is dropped; dedupe, cap 5, truncate text to 240 chars. If fewer than 3 valid insights remain (contract promises 3–5), the **whole** response is replaced by templates (never mixed). Any failure / timeout / non-JSON / HTTP error / rate limit → template, still HTTP 200.
+- `/api/ask` LLM output is `{"answer", "cited_run_ids", "supported"}`: citations must be ⊆ retrieved; a `supported: true` answer must cite ≥ 1 run; `supported: false` ("dataset doesn't contain runs that answer this") may cite none. Answers are truncated to 120 words. Obvious off-topic questions are declined **before** any LLM call by a keyword guard (`templates.on_topic`), also used by the template path.
+- Rate limit: 30 outbound LLM calls/min per process (`config.LLM_RATE_PER_MIN`), then templates. Cache: 10 min, 256 entries, key = model version + data source + scenario rounded to 2 dp (+ normalised question).
+- Default models if `LLM_MODEL` is empty: `gpt-4o-mini` (openai) / `claude-haiku-5-5` (anthropic). Anthropic and OpenAI(-compatible via `LLM_BASE_URL`) are spoken through plain HTTPS (httpx), no SDK dependency.
+- Template and LLM text are both prefixed/briefed so mock-data runs are never described as NASA results (I-09): templates prefix `[MOCK] `; the system prompt carries a mock-data rule.
 - Temperature ≤ 0.3. Cache responses in memory keyed by `hash(model_version, scenario rounded to 2dp, question)` for 10 minutes (debounced slider changes + demo re-runs shouldn't re-bill).
 - **Template fallback** (`backend/templates.py`): rule-based sentences from prediction + retrieved runs, e.g.
   - extinction high: "At {g}g with only {airflow} cm/s airflow, {material} flames self-extinguished in {k} of the {n} closest runs [cites]."
@@ -113,3 +117,5 @@ On **real** data these may not all hold; that is information, not a bug. Print p
 
 ## Changelog
 - 2026-11-14 initial.
+- 2026-11-15 (Track A) Tier 3 implemented (`llm.py`, `templates.py`, `ai.py`): rules above. Insights/ask now return `generated_by: "llm"` only when validated.
+- 2026-11-15 (Track A) Tier 2 implemented: no calibration wrapper; SHAP extinction part uses secant slope instead of tangent; artifact name `model_<hash8>_v<MODEL_CODE_VERSION>.joblib`; training in a background thread, 503 `MODEL_NOT_READY` until done.

@@ -25,6 +25,7 @@ class AppState:
     reference: dict                  # dataset-average scenario for explanations
     trained_at: str = "1970-01-01T00:00:00Z"
     metrics: Optional[dict] = None
+    model_error: Optional[str] = None
 
     @property
     def material_ids(self) -> list[str]:
@@ -120,30 +121,6 @@ def passport(st: AppState, cond: dict) -> dict:
     return {"conditions": cond, "entries": entries, "data_source": st.dataset.source}
 
 
-def _short(r: pd.Series) -> str:
-    sp = "n/a" if pd.isna(r["spread_rate_mm_s"]) else f"{r['spread_rate_mm_s']:.2f} mm/s"
-    ex = {True: "self-extinguished", False: "kept burning"}.get(None if pd.isna(r["extinguished"]) else bool(r["extinguished"]), "outcome unknown")
-    return f"{r['run_id']}: {r['material']} at {r['gravity_g']:g} g, {r['o2_percent']:g}% O2, {r['airflow_cm_s']:g} cm/s, spread {sp}, {ex}"
-
-
-def stub_insights(st: AppState, sc: dict, pred: dict) -> dict:
-    near = retrieval.nearest_runs(st.dataset.df, sc)
-    ids = near["run_id"].tolist()
-    insights = []
-    for _, r in near.head(3).iterrows():
-        insights.append({"text": f"[Stub] Nearest run - {_short(r)}.", "cited_run_ids": [r["run_id"]]})
-    return {"scenario": sc, "insights": insights, "retrieved_run_ids": ids, "generated_by": "template",
-            "data_source": st.dataset.source}
-
-
-def stub_ask(st: AppState, sc: dict, pred: dict) -> dict:
-    near = retrieval.nearest_runs(st.dataset.df, sc)
-    ids = near["run_id"].tolist()
-    return {"answer": f"[Stub] Predicted risk is {pred['risk_index']:.0f}/100. Closest evidence: {_short(near.iloc[0])}.",
-            "cited_run_ids": ids[:1], "retrieved_run_ids": ids, "generated_by": "template",
-            "data_source": st.dataset.source}
-
-
 _EFFECTS = {  # 06_TIER4_SPEC action catalogue, applied to the scenario passed to the predictor
     "vent_off": lambda s: {**s, "airflow_cm_s": 0.0},
     "co2_extinguisher": lambda s: {**s, "o2_percent": max(15.0, s["o2_percent"] - 6.0)},
@@ -165,5 +142,5 @@ def advise(st: AppState, sc: dict, state: dict, options: list[str]) -> dict:
     best = min(scores, key=lambda k: (scores[k], k))
     near = retrieval.nearest_runs(st.dataset.df, sc)
     return {"recommended_action_id": best,
-            "justification": f"[Stub] '{best}' gives the lowest modelled risk ({scores[best]:.0f}/100) among the options.",
+            "justification": f"[Template] '{best}' gives the lowest modelled risk ({scores[best]:.0f}/100) among the options.",
             "cited_run_ids": near["run_id"].tolist()[:1], "generated_by": "template", "data_source": st.dataset.source}
