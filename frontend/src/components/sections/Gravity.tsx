@@ -2,6 +2,7 @@
 // the sparse-data band from meta.model.ci_widen (I-21).
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../../store/useStore";
+import { SectionGlow } from "../common/Reveal";
 import candlePhoto from "../../assets/nasa/candle-microgravity.jpg";
 import { fmtGravity } from "../../lib/format";
 import { Flame } from "../space/Flame";
@@ -64,6 +65,7 @@ export function Gravity() {
   // right underneath — all in one screen, so dragging gravity morphs the flame in view.
   return (
     <section id="gravity" ref={section} className="relative z-10 flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-6 py-10 text-center md:px-12">
+      <SectionGlow colors={["#3DD9FF", "#2D6BFF"]} />
       <span className="eyebrow text-cool">Gravity</span>
       <h2 className="mt-2 font-space text-3xl font-bold tracking-tight text-white md:text-4xl">No gravity, no rising flame</h2>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-dim">

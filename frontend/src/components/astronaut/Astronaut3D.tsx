@@ -189,7 +189,7 @@ export default function Astronaut3D({ mood, size }: { mood: Mood; size: number }
   }, []);
   return (
     <div style={{ width: size, height: size }} aria-hidden>
-      <Canvas dpr={[1, 2]} camera={{ fov: 30, position: [0, 0.25, 4.6] }}
+      <Canvas dpr={[1, 1.5]} camera={{ fov: 30, position: [0, 0.25, 4.6] }}
         gl={{ antialias: true, alpha: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}>
         <Environment />
         <ambientLight intensity={0.2} />

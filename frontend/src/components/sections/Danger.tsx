@@ -9,6 +9,7 @@ import { useStore } from "../../store/useStore";
 import { BAND_COLOR, BAND_RANK, PLAIN_BAND, bandFor } from "../../lib/bands";
 import { shapRows } from "../../lib/shapText";
 import { PanelShell } from "../common/PanelShell";
+import { Reveal, SectionGlow } from "../common/Reveal";
 import type { Heatmap, Meta, RiskBand } from "../../types";
 
 /** Fractional index of v within an ascending axis array (crosshair uses the response's own axes, 05 §5). */
@@ -59,6 +60,7 @@ function saferOption(h: Heatmap, meta: Meta, o2: number, air: number, flat: bool
 function HeatmapSvg({ h, meta, o2, air, flat, onPick }: { h: Heatmap; meta: Meta; o2: number; air: number; flat: boolean; onPick: (o2: number, air: number) => void }) {
   const [hover, setHover] = useState<{ i: number; j: number } | null>(null);
   const nx = h.o2_values.length, ny = h.airflow_values.length;
+  const reduced = typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const W = 400, H = 280, cw = W / nx, ch = H / ny;
   const bands = useMemo(() => h.risk.map((row) => row.map((v) => bandFor(v, meta.risk_bands))), [h, meta]);
   // plain zone name at the centre of each zone that appears on the map
@@ -82,12 +84,27 @@ function HeatmapSvg({ h, meta, o2, air, flat, onPick }: { h: Heatmap; meta: Meta
           <span className="whitespace-nowrap [writing-mode:vertical-rl] rotate-180">still air</span>
         </div>
         <div className="relative flex-1">
-          <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl border border-white/10 bg-black/40" onMouseLeave={() => setHover(null)}>
-            {h.risk.map((row, i) => row.map((v, j) => (
-              <rect key={`${i}-${j}`} x={j * cw} y={H - (i + 1) * ch} width={cw + 0.3} height={ch + 0.3}
-                fill={BAND_COLOR[bands[i][j]]} opacity={0.3 + 0.55 * (v / 100)}
-                onMouseEnter={() => setHover({ i, j })} onClick={() => onPick(h.o2_values[j], h.airflow_values[i])}
-                className="cursor-pointer" />
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full rounded-xl border border-white/10 bg-black/60" onMouseLeave={() => setHover(null)}>
+            <defs>
+              {/* thermal-camera look: blur the 20×20 cells into smooth heat, clipped to the frame */}
+              <filter id="heat-blur" x="0" y="0" width="100%" height="100%"><feGaussianBlur stdDeviation={cw * 0.7} /></filter>
+              <clipPath id="heat-clip"><rect width={W} height={H} rx="10" /></clipPath>
+            </defs>
+            <g clipPath="url(#heat-clip)">
+              <g filter="url(#heat-blur)">
+                {h.risk.map((row, i) => row.map((v, j) => (
+                  <rect key={`${i}-${j}`} x={j * cw - 1} y={H - (i + 1) * ch - 1} width={cw + 2} height={ch + 2}
+                    fill={BAND_COLOR[bands[i][j]]} opacity={0.35 + 0.6 * (v / 100)} />
+                )))}
+              </g>
+              {/* faint sensor grid + a slow scan line */}
+              {Array.from({ length: nx - 1 }, (_, k) => <line key={`gx${k}`} x1={(k + 1) * cw} x2={(k + 1) * cw} y1={0} y2={H} stroke="rgba(0,0,0,0.18)" strokeWidth="0.5" />)}
+              {Array.from({ length: ny - 1 }, (_, k) => <line key={`gy${k}`} x1={0} x2={W} y1={(k + 1) * ch} y2={(k + 1) * ch} stroke="rgba(0,0,0,0.18)" strokeWidth="0.5" />)}
+            </g>
+            {/* invisible cells on top keep hover + click-to-try exact */}
+            {h.risk.map((row, i) => row.map((_, j) => (
+              <rect key={`hit${i}-${j}`} x={j * cw} y={H - (i + 1) * ch} width={cw} height={ch} fill="transparent"
+                onMouseEnter={() => setHover({ i, j })} onClick={() => onPick(h.o2_values[j], h.airflow_values[i])} className="cursor-pointer" />
             )))}
             {zones.map((z) => (
               <text key={z.b} x={z.x} y={z.y} textAnchor="middle" dominantBaseline="middle" fontSize="15" fontWeight="800" letterSpacing="3"
@@ -104,6 +121,13 @@ function HeatmapSvg({ h, meta, o2, air, flat, onPick }: { h: Heatmap; meta: Meta
               </g>
             </g>
           </svg>
+          {/* animated overlays as plain HTML (transform/opacity only) so the blurred heat layer is never re-rendered */}
+          {!reduced && (
+            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+              <div className="scan-line h-10 w-full bg-gradient-to-b from-transparent via-white/15 to-transparent" style={{ ["--scan-h" as string]: "32rem" }} />
+              <span className="ping-ring absolute h-7 w-7 rounded-full border-2 border-white" style={{ left: `${(cx / W) * 100}%`, top: `${(cy / H) * 100}%` }} />
+            </div>
+          )}
           {hv && (
             <div className="pointer-events-none absolute right-2 top-2 rounded-lg border border-white/15 bg-[#070B14]/90 px-3 py-1.5 text-[12px]">
               <span className="font-semibold" style={{ color: BAND_COLOR[hv.band] }}>{PLAIN_BAND[hv.band]} · {Math.round(hv.risk)}/100</span>
@@ -144,11 +168,13 @@ export function Danger() {
   const tip = h && meta && s.o2_percent !== undefined ? saferOption(h, meta, s.o2_percent, s.airflow_cm_s!, flat) : null;
   return (
     <section id="danger" className="relative z-10 flex min-h-screen flex-col justify-center px-6 py-20 md:px-12">
+      <SectionGlow colors={["#FF3B3B", "#FF6A1A"]} />
       <div className="mx-auto w-full max-w-6xl">
         <span className="eyebrow text-cool">Danger zone</span>
         <h2 className="mt-3 font-space text-4xl font-bold tracking-tight text-white md:text-5xl">How dangerous is this fire?</h2>
 
         {/* 1. verdict + 2. safer option */}
+        <Reveal>
         {p ? (
           <div className="mt-6 grid gap-5 lg:grid-cols-12">
             <div className="glass flex items-center gap-5 rounded-2xl p-5 lg:col-span-7">
@@ -186,9 +212,10 @@ export function Danger() {
             </div>
           </div>
         ) : <div className="skeleton mt-6 h-24 rounded-2xl" />}
+        </Reveal>
 
         {/* 3. map + 4. drivers */}
-        <div className="mt-6 grid items-start gap-6 lg:grid-cols-12">
+        <Reveal delay={120} className="mt-6 grid items-start gap-6 lg:grid-cols-12">
           <PanelShell title="Risk map" subtitle={h ? `Every oxygen${flat ? "" : " and airflow"} mix at ${h.pressure_kpa} kPa and ${h.gravity_g} g · click anywhere to try it` : undefined}
             state={s.heatmap} onRetry={() => s.retry("heatmap")} className="lg:col-span-7"
             skeleton={<div className="skeleton aspect-[4/3] w-full" />}>
@@ -233,7 +260,7 @@ export function Danger() {
               );
             }}
           </PanelShell>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

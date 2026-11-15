@@ -231,7 +231,7 @@ export default function Globe({ radius = 4.6, y = -4.75, z = -3, vehicleId = nul
     <div ref={wrap} className="absolute inset-0 cursor-grab touch-pan-y" aria-label="3D Earth — drag to rotate"
       role="img"
       onPointerDown={(e) => { Object.assign(ctl.drag, { active: true, x: e.clientX, y: e.clientY, px: 0, py: 0, vx: 0, vy: 0 }); e.currentTarget.style.cursor = "grabbing"; }}>
-      <Canvas frameloop={visible ? "always" : "never"} dpr={[1, 1.75]} camera={{ fov: 35, position: [0, 0, 5] }}
+      <Canvas frameloop={visible ? "always" : "never"} dpr={[1, 1.5]} camera={{ fov: 35, position: [0, 0, 5] }}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}>
         <Suspense fallback={null}>
           <Earth ctl={ctl} radius={radius} y={y} z={z} showOrbit={showOrbit} />

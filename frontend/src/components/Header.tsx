@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "../store/useStore";
 import { Emblem } from "./space/Emblem";
+import { passportUseful } from "./sections/Passport";
 
 const NAV = [
-  ["#overview", "Overview"], ["#gravity", "Gravity"], ["#status", "Risk"],
-  ["#earth-vs-space", "Earth vs Space"], ["#experiments", "Experiments"],
+  ["#gravity", "Gravity"], ["#status", "Risk"], ["#danger", "Danger"],
+  ["#earth-vs-space", "Earth vs Space"], ["#passport", "Passport"], ["#experiments", "Experiments"],
 ] as const;
 
 /** Elapsed time since the page opened — a session clock, not real mission data. */
@@ -20,12 +21,25 @@ function useSessionClock() {
 export function Header() {
   const meta = useStore((s) => s.meta.data);
   const compareSource = useStore((s) => s.compare.data?.data_source);
+  const showPassport = useStore((s) => passportUseful(s.passport.data));
+  // The nav measures itself: if its links don't fully fit beside the badges, it hides instead of overlapping or clipping.
+  const navRef = useRef<HTMLElement>(null);
+  const [navFits, setNavFits] = useState(true);
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const check = () => setNavFits(el.scrollWidth <= el.clientWidth + 1);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    check();
+    return () => ro.disconnect();
+  }, [showPassport, compareSource, meta]);
   const mode = useStore((s) => s.mode);
   const setMode = useStore((s) => s.setMode);
   const setAboutOpen = useStore((s) => s.setAboutOpen);
   const clock = useSessionClock();
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[var(--space)]/85 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[rgba(3,5,11,0.97)] shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
       <div className="mx-auto flex h-20 max-w-[1720px] items-center justify-between gap-6 px-6 md:px-10">
         <a href="#overview" className="flex shrink-0 items-center gap-4">
           <Emblem />
@@ -36,12 +50,11 @@ export function Header() {
             <span className="num text-[11px] uppercase tracking-[0.2em] text-dim">NASA Space Apps · Flame in Freefall</span>
           </div>
         </a>
-        <nav className="num hidden min-w-0 items-center gap-4 text-[13px] uppercase tracking-[0.12em] text-dim xl:flex">
-          {NAV.filter(([href]) => href !== "#earth-vs-space" || meta?.model.capabilities.gravity_effect !== false || compareSource === "mock").map(([href, label], i) => (
-            <span key={href} className="flex items-center gap-4">
-              {i > 0 && <span className="select-none text-white/20">·</span>}
-              <a href={href} className="whitespace-nowrap hover:text-white">{label}</a>
-            </span>
+        <nav ref={navRef} aria-hidden={!navFits}
+          className={`num hidden min-w-0 flex-1 items-center justify-center gap-x-6 overflow-hidden text-[12px] uppercase tracking-[0.1em] text-dim lg:flex ${navFits ? "" : "invisible"}`}>
+          {NAV.filter(([href]) => href !== "#earth-vs-space" || meta?.model.capabilities.gravity_effect !== false || compareSource === "mock")
+            .filter(([href]) => href !== "#passport" || showPassport).map(([href, label]) => (
+            <a key={href} href={href} className="whitespace-nowrap py-1 hover:text-white">{label}</a>
           ))}
         </nav>
         <div className="flex shrink-0 items-center gap-3">

@@ -9,6 +9,7 @@ import { Gravity } from "./components/sections/Gravity";
 import { Status } from "./components/sections/Status";
 import { Danger } from "./components/sections/Danger";
 import { Compare } from "./components/sections/Compare";
+import { Passport } from "./components/sections/Passport";
 import { Experiments, RunDrawer } from "./components/sections/Experiments";
 import { AstronautChat } from "./components/astronaut/AstronautChat";
 import { AboutModal } from "./components/AboutModal";
@@ -43,13 +44,14 @@ export default function App() {
         <ErrorBoundary name="status"><Status /></ErrorBoundary>
         <ErrorBoundary name="danger"><Danger /></ErrorBoundary>
         <ErrorBoundary name="compare"><Compare /></ErrorBoundary>
+        <ErrorBoundary name="passport"><Passport /></ErrorBoundary>
         <ErrorBoundary name="experiments"><Experiments /></ErrorBoundary>
       </main>
       <ErrorBoundary name="astronaut-chat" fallback={null}><AstronautChat /></ErrorBoundary>
       <RunDrawer />
       <ErrorBoundary name="about" fallback={null}><AboutModal /></ErrorBoundary>
       <div id="mission-report-wrap" aria-hidden><ErrorBoundary name="report" fallback={null}><MissionReport /></ErrorBoundary></div>
-      <footer className="num relative z-10 border-t border-white/10 bg-[var(--space)]/80 px-6 py-4 text-center text-[12px] text-dim">
+      <footer className="num relative z-10 border-t border-white/10 bg-[rgba(3,5,11,0.85)] px-6 py-4 text-center text-[12px] text-dim">
         Research and education demo — not operational fire-safety guidance.
         {meta.data && ` Data: ${meta.data.data_source === "nasa" ? "NASA experiment runs" : "mock runs (real NASA data coming)"} · ${meta.data.n_runs} runs. `}
         <button onClick={() => useStore.getState().setAboutOpen(true)} className="text-cool underline-offset-2 hover:underline">About the data</button>

@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { api, ApiFailure, isAbort } from "../api/client";
 import type {
-  ApiErrorBody, Compare, Heatmap, InsightsResponse, Meta, Prediction, RunsResponse, Scenario,
+  ApiErrorBody, Compare, Heatmap, InsightsResponse, Meta, Passport, Prediction, RunsResponse, Scenario,
 } from "../types";
 
 export type Async<T> = {
@@ -15,7 +15,7 @@ export type Async<T> = {
 };
 const idle = <T,>(): Async<T> => ({ status: "idle", data: null, error: null, requestId: 0 });
 
-type Slice = "prediction" | "heatmap" | "compare" | "insights";
+type Slice = "prediction" | "heatmap" | "compare" | "insights" | "passport";
 type Key = keyof Scenario;
 
 // 05 §3 — which inputs each call depends on, and its debounce.
@@ -23,9 +23,10 @@ const DEPS: Record<Slice, Key[]> = {
   prediction: ["material", "o2_percent", "pressure_kpa", "airflow_cm_s", "gravity_g"],
   heatmap: ["material", "pressure_kpa", "gravity_g"],
   compare: ["material", "o2_percent", "pressure_kpa", "airflow_cm_s"],
+  passport: ["o2_percent", "pressure_kpa", "airflow_cm_s", "gravity_g"], // all materials, so material changes don't refetch
   insights: ["material", "o2_percent", "pressure_kpa", "airflow_cm_s", "gravity_g"],
 };
-const DEBOUNCE_MS: Record<Slice, number> = { prediction: 300, heatmap: 300, compare: 300, insights: 800 };
+const DEBOUNCE_MS: Record<Slice, number> = { prediction: 300, heatmap: 300, compare: 300, insights: 800, passport: 300 };
 const WARMUP_RETRY_MS = 2000;
 const WARMUP_MAX_MS = 60000;
 
@@ -37,6 +38,7 @@ interface State extends Partial<Scenario> {
   prediction: Async<Prediction>;
   heatmap: Async<Heatmap>;
   compare: Async<Compare>;
+  passport: Async<Passport>;
   insights: Async<InsightsResponse>;
   selectedRunId: string | null;
   chatOpen: boolean;
@@ -71,6 +73,7 @@ export const useStore = create<State>((set, get) => {
     switch (slice) {
       case "prediction": return api.predict(sc, signal);
       case "heatmap": return api.heatmap({ material: sc.material, pressure_kpa: sc.pressure_kpa, gravity_g: sc.gravity_g }, signal);
+      case "passport": return api.passport({ o2_percent: sc.o2_percent, pressure_kpa: sc.pressure_kpa, airflow_cm_s: sc.airflow_cm_s, gravity_g: sc.gravity_g }, signal);
       case "compare": return api.compare({ material: sc.material, o2_percent: sc.o2_percent, pressure_kpa: sc.pressure_kpa, airflow_cm_s: sc.airflow_cm_s }, signal);
       case "insights": return api.insights(sc, signal);
     }
@@ -155,6 +158,7 @@ export const useStore = create<State>((set, get) => {
     prediction: idle(),
     heatmap: idle(),
     compare: idle(),
+    passport: idle(),
     insights: idle(),
     selectedRunId: null,
     chatOpen: false,

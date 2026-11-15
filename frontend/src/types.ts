@@ -184,3 +184,21 @@ export interface AskResponse {
   generated_by: GeneratedBy;
   data_source: DataSource;
 }
+
+// ---- /api/passport (06_TIER4_SPEC §A) ----
+export interface PassportEntry {
+  material: MaterialId;
+  label: string;
+  fuel_type: FuelType;
+  risk_index: number;
+  grade: Grade; // server-side from meta.grade_bands (I-08)
+  spread_rate_mm_s: number;
+  extinction_probability: number;
+  flame_temp_k: number | null;
+  matching_runs: number;
+}
+export interface Passport {
+  conditions: Omit<Scenario, "material">;
+  entries: PassportEntry[];
+  data_source: DataSource;
+}
