@@ -63,13 +63,14 @@ class Artifact:
     spread: object
     spread_lo: object
     spread_hi: object
-    temp: object
+    temp: Optional[object]       # None when the data has too few flame-temperature measurements
     ext: object
     spread_ref: float
     metrics: dict
     trained_at: str
     data_hash: str
     code_version: int
+    capabilities: dict
 
 
 def _require(n: int, name: str) -> None:
@@ -78,10 +79,10 @@ def _require(n: int, name: str) -> None:
                         f"{config.MIN_TRAIN_ROWS}. Check data_report.json (null counts per target).")
 
 
-def _cv_r2(X, y) -> Optional[float]:
+def _cv_r2(X, y, params) -> Optional[float]:
     try:
         cv = KFold(n_splits=min(config.CV_FOLDS, len(y) // 6 or 2), shuffle=True, random_state=config.RANDOM_STATE)
-        return round(float(cross_val_score(GradientBoostingRegressor(**config.GB_PARAMS), X, y, cv=cv, scoring="r2").mean()), 3)
+        return round(float(cross_val_score(GradientBoostingRegressor(**params), X, y, cv=cv, scoring="r2").mean()), 3)
     except Exception as e:  # undefined metric => null, never a fake number
         log.warning("r2 undefined: %s", e)
         return None
@@ -94,20 +95,24 @@ def train(ds: Dataset, materials: list[str]) -> Artifact:
     m_sp = df["spread_rate_mm_s"].notna().to_numpy()
     m_t = df["flame_temp_k"].notna().to_numpy()
     m_e = df["extinguished"].notna().to_numpy()
-    _require(int(m_sp.sum()), "spread")
-    _require(int(m_t.sum()), "flame-temperature")
+    _require(int(m_sp.sum()), "spread")          # spread and extinction are essential: no model without them
     _require(int(m_e.sum()), "extinction")
+    has_temp = int(m_t.sum()) >= config.MIN_TRAIN_ROWS   # temperature is optional: without it flame_temp_k is null, not invented
+    if not has_temp:
+        log.warning("only %d flame-temperature rows (< %d): no temperature model; flame_temp_k will be null",
+                    int(m_t.sum()), config.MIN_TRAIN_ROWS)
 
     Xs, ys = X_all[m_sp], df["spread_rate_mm_s"].to_numpy(float)[m_sp]
     Xt, yt = X_all[m_t], df["flame_temp_k"].to_numpy(float)[m_t]
     Xe, ye = X_all[m_e], df.loc[m_e, "extinguished"].astype(int).to_numpy()
 
-    P = config.GB_PARAMS
+    P = config.GB_PARAMS if len(df) >= config.SMALL_DATA_ROWS else config.GB_PARAMS_SMALL   # small data => shallow, regularised
+    log.info("%d training rows -> %s settings", len(df), "standard" if P is config.GB_PARAMS else "small-data")
     spread = GradientBoostingRegressor(**P).fit(Xs, ys)
     lo_q, hi_q = config.CI_QUANTILES
     spread_lo = GradientBoostingRegressor(loss="quantile", alpha=lo_q, **P).fit(Xs, ys)
     spread_hi = GradientBoostingRegressor(loss="quantile", alpha=hi_q, **P).fit(Xs, ys)
-    temp = GradientBoostingRegressor(**P).fit(Xt, yt)
+    temp = GradientBoostingRegressor(**P).fit(Xt, yt) if has_temp else None
 
     auc: Optional[float] = None
     if len(set(ye.tolist())) < 2:
@@ -128,12 +133,18 @@ def train(ds: Dataset, materials: list[str]) -> Artifact:
             log.warning("auc undefined: %s", e)
 
     spread_ref = max(float(np.percentile(ys, 99)), 0.1)
-    metrics = {"spread_r2": _cv_r2(Xs, ys), "temp_r2": _cv_r2(Xt, yt), "extinction_auc": auc, "n_train": int(len(df))}
+    metrics = {"spread_r2": _cv_r2(Xs, ys, P), "temp_r2": _cv_r2(Xt, yt, P) if has_temp else None, "extinction_auc": auc,
+               "n_train": int(len(df))}
+    g = df["gravity_g"].to_numpy(float)
+    capabilities = {"flame_temp": has_temp,
+                    "gravity_effect": bool((g < 0.05).sum() >= config.MIN_GRAVITY_ROWS and (g > 0.95).sum() >= config.MIN_GRAVITY_ROWS)}
+    if not capabilities["gravity_effect"]:
+        log.warning("training data has no 0 g AND 1 g rows: the model cannot know a gravity effect (compare panel is not meaningful)")
     log.info("trained on %d rows: %s, spread_ref=%.3f", len(df), metrics, spread_ref)
     return Artifact(materials=list(materials), spread=spread, spread_lo=spread_lo, spread_hi=spread_hi, temp=temp, ext=ext,
                     spread_ref=spread_ref, metrics=metrics,
                     trained_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                    data_hash=ds.sha256, code_version=config.MODEL_CODE_VERSION)
+                    data_hash=ds.sha256, code_version=config.MODEL_CODE_VERSION, capabilities=capabilities)
 
 
 def artifact_path(ds: Dataset, models_dir: Optional[Path] = None) -> Path:
@@ -174,6 +185,7 @@ class GBPredictor:
         self.spread_ref = art.spread_ref
         self.trained_at = art.trained_at
         self.metrics = art.metrics
+        self.capabilities = art.capabilities
         self.version = f"{art.trained_at}-{art.data_hash[:8]}"
         self.materials = art.materials
         self._exp_spread = self._exp_ext = None
@@ -185,7 +197,8 @@ class GBPredictor:
         X = encode(df, self.materials)
         ext = a.ext.predict_proba(X)[:, 1]  # P(extinguished): column 1, asserted at train time (R-13)
         return scoring.finalize(df["gravity_g"].to_numpy(float), a.spread.predict(X), a.spread_lo.predict(X),
-                                a.spread_hi.predict(X), a.temp.predict(X), ext, self.spread_ref)
+                                a.spread_hi.predict(X),
+                                a.temp.predict(X) if a.temp is not None else np.full(len(df), np.nan), ext, self.spread_ref)
 
     # ---- SHAP in risk-index points ------------------------------------------------
     def _explainers(self):

@@ -1,0 +1,23 @@
+{
+  "scenario": {
+    "material": "methanol",
+    "o2_percent": 21.0,
+    "pressure_kpa": 101.3,
+    "airflow_cm_s": 10.0
+  },
+  "microgravity": {
+    "gravity_g": 0.0,
+    "spread_rate_mm_s": 0.82,
+    "flame_temp_k": null,
+    "extinction_probability": 0.31,
+    "risk_index": 35.8
+  },
+  "earth": {
+    "gravity_g": 1.0,
+    "spread_rate_mm_s": 2.4,
+    "flame_temp_k": null,
+    "extinction_probability": 0.04,
+    "risk_index": 62.4
+  },
+  "data_source": "nasa"
+}

@@ -1,0 +1,173 @@
+{
+  "data_source": "nasa",
+  "n_runs": 190,
+  "materials": [
+    {
+      "id": "heptane",
+      "label": "n-Heptane",
+      "fuel_type": "droplet"
+    },
+    {
+      "id": "methanol",
+      "label": "Methanol (droplet)",
+      "fuel_type": "droplet"
+    }
+  ],
+  "experiments": [
+    "FLEX",
+    "Saffire"
+  ],
+  "vehicles": [
+    {
+      "id": "iss",
+      "label": "ISS",
+      "o2_percent": 21.0,
+      "pressure_kpa": 101.3,
+      "airflow_cm_s": 10,
+      "gravity_g": 0.0,
+      "note": "Placeholder - Track C to verify"
+    },
+    {
+      "id": "gateway",
+      "label": "Artemis Gateway",
+      "o2_percent": 21.0,
+      "pressure_kpa": 101.3,
+      "airflow_cm_s": 10,
+      "gravity_g": 0.0,
+      "note": "Placeholder - Track C to verify"
+    },
+    {
+      "id": "lunar",
+      "label": "Lunar Habitat",
+      "o2_percent": 34.0,
+      "pressure_kpa": 56.5,
+      "airflow_cm_s": 8,
+      "gravity_g": 0.17,
+      "note": "Exploration atmosphere"
+    },
+    {
+      "id": "mars_transit",
+      "label": "Mars Transit",
+      "o2_percent": 26.5,
+      "pressure_kpa": 70.3,
+      "airflow_cm_s": 8,
+      "gravity_g": 0.0,
+      "note": "Placeholder - Track C to verify"
+    }
+  ],
+  "ranges": {
+    "o2_percent": {
+      "min": 15,
+      "max": 40,
+      "step": 0.5
+    },
+    "pressure_kpa": {
+      "min": 50,
+      "max": 101.3,
+      "step": 0.1
+    },
+    "airflow_cm_s": {
+      "min": 0,
+      "max": 50,
+      "step": 1
+    },
+    "gravity_g": {
+      "min": 0,
+      "max": 1,
+      "step": 0.01
+    }
+  },
+  "gravity_marks": [
+    {
+      "value": 0,
+      "label": "Microgravity"
+    },
+    {
+      "value": 0.17,
+      "label": "Moon"
+    },
+    {
+      "value": 0.38,
+      "label": "Mars"
+    },
+    {
+      "value": 1,
+      "label": "Earth"
+    }
+  ],
+  "risk_bands": [
+    {
+      "band": "low",
+      "min": 0,
+      "max": 25
+    },
+    {
+      "band": "elevated",
+      "min": 25,
+      "max": 50
+    },
+    {
+      "band": "high",
+      "min": 50,
+      "max": 75
+    },
+    {
+      "band": "critical",
+      "min": 75,
+      "max": 100
+    }
+  ],
+  "grade_bands": [
+    {
+      "grade": "A",
+      "max_risk": 20
+    },
+    {
+      "grade": "B",
+      "max_risk": 35
+    },
+    {
+      "grade": "C",
+      "max_risk": 50
+    },
+    {
+      "grade": "D",
+      "max_risk": 65
+    },
+    {
+      "grade": "E",
+      "max_risk": 80
+    },
+    {
+      "grade": "F",
+      "max_risk": 100
+    }
+  ],
+  "model": {
+    "version": "2026-11-15T04:08:04+00:00-bd0e608b",
+    "trained_at": "2026-11-14T00:00:00Z",
+    "spread_ref_mm_s": 0.903,
+    "weights": {
+      "spread": 0.6,
+      "survival": 0.4
+    },
+    "critical_length_mm": 100,
+    "ci_widen": {
+      "g_min": 0.05,
+      "g_max": 0.95,
+      "factor": 1.5
+    },
+    "metrics": {
+      "spread_r2": 0.215,
+      "temp_r2": null,
+      "extinction_auc": 0.609,
+      "n_train": 182
+    },
+    "stub": false,
+    "capabilities": {
+      "flame_temp": false,
+      "gravity_effect": false
+    }
+  },
+  "llm_enabled": false
+}

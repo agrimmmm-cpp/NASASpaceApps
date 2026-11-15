@@ -10,7 +10,7 @@ Do not start until Tier 3 acceptance (`08_TASKS.md`) is green. This doc fixes th
 interface PassportEntry {
   material: MaterialId; label: string; fuel_type: "solid" | "droplet" | "gas";
   risk_index: number; grade: "A"|"B"|"C"|"D"|"E"|"F";     // from meta.grade_bands (I-08)
-  spread_rate_mm_s: number; extinction_probability: number; flame_temp_k: number;
+  spread_rate_mm_s: number; extinction_probability: number; flame_temp_k: number | null;
   matching_runs: number;
 }
 interface Passport { conditions: Omit<Scenario,"material">; entries: PassportEntry[]; data_source: DataSource; }

@@ -36,6 +36,13 @@ Backend only: `cd backend && .venv/bin/uvicorn main:app --reload` (interactive A
 - Absent → the deterministic mock file `data/mock_combustion_runs.csv` is used → **MOCK DATA** badge. Every mock row's `source_note` starts with `[MOCK]`.
 - Column schema: `data/schema.json` (details in `docs/03_DATA_CONTRACT.md`). To plug in real NASA PSI data, follow section 4 of that doc, drop the CSV in `data/`, restart.
 
+### Real NASA data (built, not active)
+
+`make real-data` builds `data/candidate/combustion_runs.csv` from NASA PSI FLEX (droplets) and Saffire-II (solids), CC0; see [`data/SOURCES.md`](data/SOURCES.md).
+Try it without activating: `make train DATA=data/candidate/combustion_runs.csv` and `make sanity DATA=data/candidate/combustion_runs.csv`.
+Activate with `make promote-real` and restart: the badge becomes NASA DATA and the model retrains. **Be aware:** the real data is all 0 g, has no flame temperature and only
+two predictable materials (methanol, heptane), so `meta.model.capabilities` is false/false, `flame_temp_k` is null and the Earth-vs-Space comparison has no real basis.
+
 ## Risk Index (shown verbatim in the dashboard tooltip)
 
 ```

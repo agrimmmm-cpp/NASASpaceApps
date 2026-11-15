@@ -159,6 +159,12 @@ class ModelMetrics(BaseModel):
     n_train: Optional[int] = None
 
 
+class ModelCapabilities(BaseModel):
+    """What the loaded data can honestly support. The UI hides panels whose capability is false."""
+    flame_temp: bool        # false => flame_temp_k is null everywhere
+    gravity_effect: bool    # false => no 0 g AND 1 g data; the Earth-vs-Space comparison is meaningless
+
+
 class ModelInfo(BaseModel):
     version: str
     trained_at: str
@@ -167,6 +173,7 @@ class ModelInfo(BaseModel):
     critical_length_mm: float
     ci_widen: CiWiden
     metrics: ModelMetrics
+    capabilities: ModelCapabilities
     stub: bool
 
 
@@ -217,7 +224,7 @@ class Prediction(BaseModel):
     spread_rate_mm_s: float
     spread_rate_ci: tuple[float, float]
     ci_widened: bool
-    flame_temp_k: float
+    flame_temp_k: Optional[float]   # null when the dataset has no flame-temperature measurements (meta.model.capabilities.flame_temp)
     extinction_probability: float
     risk_index: float
     risk_band: RiskBand
@@ -242,7 +249,7 @@ class Heatmap(BaseModel):
 class CompareSide(BaseModel):
     gravity_g: float
     spread_rate_mm_s: float
-    flame_temp_k: float
+    flame_temp_k: Optional[float]
     extinction_probability: float
     risk_index: float
 
@@ -290,7 +297,7 @@ class PassportEntry(BaseModel):
     grade: Grade
     spread_rate_mm_s: float
     extinction_probability: float
-    flame_temp_k: float
+    flame_temp_k: Optional[float]
     matching_runs: int
 
 

@@ -67,10 +67,16 @@ GRADE_BANDS = [  # grade = first band where risk < max_risk (Tier 4)
 ]
 
 # ---- model training (docs/04_MODEL_SPEC.md section 3) ---------------------
-MODEL_CODE_VERSION = 1          # bump when features/hyper-parameters change: invalidates cached artifacts
+MODEL_CODE_VERSION = 3          # bump when features/hyper-parameters change: invalidates cached artifacts
 MIN_TRAIN_ROWS = 30             # per target; below this training raises instead of shipping a toy model
 GB_PARAMS = dict(n_estimators=250, max_depth=3, learning_rate=0.05, subsample=0.8, random_state=RANDOM_STATE)
 CV_FOLDS = 5
+# Small datasets (real NASA data has ~175 rows) overfit the deeper setting above: repeated 5-fold CV on the FLEX candidate gave
+# spread R2 0.07 / extinction AUC 0.48 at depth 3 vs 0.24 / 0.61 for depth-1 stumps with min_samples_leaf=10 (docs/04 changelog).
+SMALL_DATA_ROWS = 300
+GB_PARAMS_SMALL = dict(n_estimators=100, max_depth=1, learning_rate=0.05, subsample=0.8, min_samples_leaf=10, random_state=RANDOM_STATE)
+MIN_MATERIAL_ROWS = 10          # a material needs this many rows to be selectable/predictable; fewer stay in the Explorer only
+MIN_GRAVITY_ROWS = 10           # rows at ~0 g AND at ~1 g needed before the model claims to know a gravity effect
 
 # ---- confidence interval (I-15, I-21) ------------------------------------
 CI_QUANTILES = (0.1, 0.9)

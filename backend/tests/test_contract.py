@@ -16,6 +16,7 @@ FIXTURE_MODELS = {
     "heatmap.json": schemas.Heatmap, "compare.json": schemas.Compare, "insights.json": schemas.InsightsResponse,
     "ask.json": schemas.AskResponse, "error_validation.json": schemas.ApiError,
     "error_model_not_ready.json": schemas.ApiError,
+    "meta_real_data.json": schemas.Meta, "predict_real_data.json": schemas.Prediction, "compare_real_data.json": schemas.Compare,
 }
 
 

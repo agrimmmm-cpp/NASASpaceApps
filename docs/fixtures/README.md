@@ -7,3 +7,5 @@ Example API responses matching `02_API_CONTRACT.md`. Both tracks test against th
 - `runs.json` includes a row with nulls to exercise "—" rendering.
 - Backend: every file must validate against its Pydantic model (contract test 1). Frontend: render every file in a dev fixture page.
 - Changing a shape means updating the fixture in the same PR (see `00_START_HERE.md`).
+
+- `meta_real_data.json`, `predict_real_data.json`, `compare_real_data.json`: what the API returns when the loaded data is the real NASA candidate (2 predictable materials, `flame_temp_k` null, `capabilities` all false). The UI must render these: hide temperature and the Earth-vs-Space comparison when the capability is false.

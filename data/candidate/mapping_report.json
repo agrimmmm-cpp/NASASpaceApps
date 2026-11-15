@@ -1,0 +1,68 @@
+{
+  "sources": {
+    "PSI-69": {
+      "experiment": "FLEX",
+      "doi": "10.60555/mbq8-0451",
+      "license": "CC0-1.0",
+      "sha256": "37c88ce8ae9391b7544ff630a45ce87543d04d317cdbfbed104fe7d5c27e1b96",
+      "retrieved_at": "2026-11-15T04:05:53+00:00",
+      "rows_read": 274,
+      "rows_mapped": 182,
+      "rejected": {
+        "pressure_above_101.3kPa_range": 76,
+        "o2_outside_15_40pct": 15,
+        "bad_pressure": 1
+      }
+    },
+    "PSI-99": {
+      "experiment": "Saffire-II",
+      "doi": "10.60555/2chp-m469",
+      "license": "CC0-1.0",
+      "sha256": "3c24390b9ef86f3d1ebaab911a1a3cc95a8759aebf42062371370e6d4b31b8ac",
+      "retrieved_at": "2026-11-15T04:05:54+00:00",
+      "rows_read": 9,
+      "rows_mapped": 8,
+      "rejected": {
+        "mixed_material_sample": 1
+      }
+    }
+  },
+  "assumptions": [
+    "gravity_g = 0.0 for every row: all flight data is ISS/Cygnus microgravity (residual acceleration not recorded in the tables).",
+    "FLEX airflow_cm_s = 0.0: FLEX droplets are free-floating in a still chamber; the table does not record the small drift or translation flows used in some tests, so those tests are not distinguished.",
+    "FLEX spread_rate_mm_s holds the droplet BURNING-RATE CONSTANT in mm^2/s (unit confirmed in NASA NTRS 20120016855), which is a different physical quantity from the flame-spread rate in mm/s used for solids. fuel_type separates them (R-05).",
+    "FLEX extinguished: 'Extinction' -> true (flame went out before the droplet burned away), 'Completion' -> false (burned to completion), 'Disruption' -> empty (test ended by droplet disruption; outcome unknown).",
+    "FLEX o2_percent = oxygen mole fraction x 100; diluents (N2/CO2/He) are not model features and are listed in source_note.",
+    "FLEX pressure converted from mmHg (x0.133322368).",
+    "Saffire-II pressure_kpa = 100.6 for all rows: not in the PSI table; cabin atmosphere at hatch closure was 22.1% O2, 100.6 kPa (Olson et al. 2019, Fire Technology, doi:10.1007/s10694-019-00863-3).",
+    "Saffire-II o2_percent from the table's derived value ('~ 21.5' -> 21.5; '22.1 to 22.0' -> mean 22.05).",
+    "Saffire-II extinguished: burn time 'Insignificant' (flame did not sustain, ~0 cm burned) -> true; a measured burn time -> false.",
+    "Saffire-II spread_rate_mm_s only where the table gives a microgravity spread rate in mm/s; PMMA samples 2-8/2-9 report only a very slow regression rate (Note 4), left empty. Sample 2-7 (PMMA and Nomex on one card) is rejected: results cannot be attributed to one material.",
+    "Saffire-II samples without a material name in the table (2-6, 2-9) inherit the previous row's material (merged cell).",
+    "No flame temperature was measured in either source: flame_temp_k is empty for every row.",
+    "1 g columns in the Saffire-II table are NOT used: their test conditions are not stated, and mixing them would invent a gravity effect."
+  ],
+  "rows_total": 190,
+  "by_material": {
+    "methanol": 102,
+    "heptane": 80,
+    "silicone": 4,
+    "SIBAL": 2,
+    "PMMA": 2
+  },
+  "non_null": {
+    "run_id": 190,
+    "experiment": 190,
+    "fuel_type": 190,
+    "material": 190,
+    "gravity_g": 190,
+    "o2_percent": 190,
+    "pressure_kpa": 190,
+    "airflow_cm_s": 190,
+    "spread_rate_mm_s": 177,
+    "flame_temp_k": 0,
+    "extinguished": 144,
+    "burn_duration_s": 180,
+    "source_note": 190
+  }
+}

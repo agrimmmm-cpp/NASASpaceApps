@@ -97,7 +97,9 @@ def meta(request: Request):
             "spread_ref_mm_s": p.spread_ref if p else config.SPREAD_REF_DEFAULT_MM_S,
             "weights": {"spread": config.W_SPREAD, "survival": config.W_SURVIVAL},
             "critical_length_mm": config.CRITICAL_LENGTH_MM, "ci_widen": config.CI_WIDEN,
-            "metrics": metrics, "stub": bool(p and p.is_stub),
+            "metrics": metrics,
+            "capabilities": getattr(p, "capabilities", None) or services.data_capabilities(df),
+            "stub": bool(p and p.is_stub),
         },
         "llm_enabled": config.llm_enabled(),
     }

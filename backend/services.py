@@ -33,9 +33,20 @@ class AppState:
 
 
 def build_materials(df: pd.DataFrame) -> list[dict]:
+    """Materials the model may predict: in the vocabulary AND with at least MIN_MATERIAL_ROWS rows.
+    Thinner materials stay visible in the Explorer (/api/runs) and in citations but can't be selected: a model fitted to
+    2-4 rows would be noise presented as a prediction (R-09)."""
     vocab = load_vocab()
-    present = [m for m in df["material"].unique() if m in vocab]
-    return [vocab[m] for m in sorted(present)]
+    counts = df["material"].value_counts()
+    ok = [m for m, n in counts.items() if m in vocab and n >= config.MIN_MATERIAL_ROWS]
+    return [vocab[m] for m in sorted(ok)]
+
+
+def data_capabilities(df: pd.DataFrame) -> dict:
+    """What the data can support, derived from the rows (used before a model exists; the trained model reports its own)."""
+    g = df["gravity_g"]
+    return {"flame_temp": int(df["flame_temp_k"].notna().sum()) >= config.MIN_TRAIN_ROWS,
+            "gravity_effect": bool((g < 0.05).sum() >= config.MIN_GRAVITY_ROWS and (g > 0.95).sum() >= config.MIN_GRAVITY_ROWS)}
 
 
 def reference_scenario(df: pd.DataFrame, materials: list[dict]) -> dict:
@@ -67,7 +78,7 @@ def predict_one(st: AppState, sc: dict) -> dict:
         "spread_rate_mm_s": float(row["spread_rate_mm_s"]),
         "spread_rate_ci": (float(row["spread_lo"]), float(row["spread_hi"])),
         "ci_widened": bool(row["ci_widened"]),
-        "flame_temp_k": float(row["flame_temp_k"]),
+        "flame_temp_k": _none(row["flame_temp_k"]),
         "extinction_probability": float(row["extinction_probability"]),
         "risk_index": risk,
         "risk_band": scoring.risk_band(risk),
@@ -99,7 +110,7 @@ def compare(st: AppState, sc: dict) -> dict:
 
     def side(i: int, g: float) -> dict:
         r = res.iloc[i]
-        return {"gravity_g": g, "spread_rate_mm_s": float(r["spread_rate_mm_s"]), "flame_temp_k": float(r["flame_temp_k"]),
+        return {"gravity_g": g, "spread_rate_mm_s": float(r["spread_rate_mm_s"]), "flame_temp_k": _none(r["flame_temp_k"]),
                 "extinction_probability": float(r["extinction_probability"]), "risk_index": float(r["risk_index"])}
 
     return {"scenario": {k: sc[k] for k in ("material", "o2_percent", "pressure_kpa", "airflow_cm_s")},
@@ -115,7 +126,7 @@ def passport(st: AppState, cond: dict) -> dict:
                         "risk_index": float(r["risk_index"]), "grade": scoring.grade_for(float(r["risk_index"])),
                         "spread_rate_mm_s": float(r["spread_rate_mm_s"]),
                         "extinction_probability": float(r["extinction_probability"]),
-                        "flame_temp_k": float(r["flame_temp_k"]),
+                        "flame_temp_k": _none(r["flame_temp_k"]),
                         "matching_runs": retrieval.count_matching(st.dataset.df, sc)})
     entries.sort(key=lambda e: e["label"])
     return {"conditions": cond, "entries": entries, "data_source": st.dataset.source}
