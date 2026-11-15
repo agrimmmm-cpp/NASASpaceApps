@@ -44,11 +44,14 @@ export function Flame({ gravity, intensity = 0.5, size = 160 }: { gravity: numbe
         <filter id={`b${id}`} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation={lerp(2.4, 1.2, t)} />
         </filter>
-        <filter id={`h${id}`} x="-100%" y="-100%" width="300%" height="300%">
-          <feGaussianBlur stdDeviation="9" />
-        </filter>
+        {/* soft halo as a gradient (was a large Gaussian blur, which is expensive to repaint) */}
+        <radialGradient id={`h${id}`}>
+          <stop offset="0%" stopColor={halo} stopOpacity="1" />
+          <stop offset="55%" stopColor={halo} stopOpacity="0.45" />
+          <stop offset="100%" stopColor={halo} stopOpacity="0" />
+        </radialGradient>
       </defs>
-      <circle cx="50" cy="52" r={lerp(30, 26, t)} fill={halo} opacity={glow * 0.55} filter={`url(#h${id})`} />
+      <circle cx="50" cy="52" r={lerp(30, 26, t) + 14} fill={`url(#h${id})`} opacity={glow * 0.55} />
       <g>
         <path d={shapePath(t, r, 50)} fill={`url(#f${id})`} filter={`url(#b${id})`} opacity={lerp(0.8, 1, t)} />
         <ellipse cx="50" cy={lerp(50, 60, t)} rx={r * 0.35} ry={r * lerp(0.35, 0.5, t)} fill={core} opacity="0.85"

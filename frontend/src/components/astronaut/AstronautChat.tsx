@@ -103,6 +103,15 @@ export function AstronautChat() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, setOpen]);
 
+  // questions sent from other sections (e.g. the Investigation Explorer)
+  const queued = useStore((s) => s.chatQuestion);
+  useEffect(() => {
+    if (!open || !queued || pending || typing !== null) return;
+    useStore.getState().clearChatQuestion();
+    void ask(queued);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, queued, pending, typing]);
+
   async function ask(question: string) {
     const text = question.trim();
     const sc = scenarioOf(useStore.getState());

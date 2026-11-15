@@ -42,6 +42,7 @@ interface State extends Partial<Scenario> {
   insights: Async<InsightsResponse>;
   selectedRunId: string | null;
   chatOpen: boolean;
+  chatQuestion: string | null; // a question another section wants Nova to answer (consumed by AstronautChat)
   aboutOpen: boolean;
 
   init(): Promise<void>;
@@ -50,6 +51,8 @@ interface State extends Partial<Scenario> {
   retry(slice: Slice | "meta" | "runs"): void;
   selectRun(id: string | null): void;
   setChatOpen(open: boolean): void;
+  askNova(question: string): void;
+  clearChatQuestion(): void;
   setAboutOpen(open: boolean): void;
   setMode(mode: "explore" | "command"): void;
 }
@@ -162,6 +165,7 @@ export const useStore = create<State>((set, get) => {
     insights: idle(),
     selectedRunId: null,
     chatOpen: false,
+    chatQuestion: null,
     aboutOpen: false,
 
     async init() {
@@ -211,6 +215,8 @@ export const useStore = create<State>((set, get) => {
 
     selectRun: (id) => set({ selectedRunId: id }),
     setChatOpen: (open) => set({ chatOpen: open }),
+    askNova: (question) => set({ chatOpen: true, chatQuestion: question }),
+    clearChatQuestion: () => set({ chatQuestion: null }),
     setAboutOpen: (open) => set({ aboutOpen: open }),
     setMode: (mode) => set({ mode }),
   };

@@ -1,6 +1,7 @@
 // Section 2: porthole flame + gravity journey. Marks from meta.gravity_marks placed at true scale;
 // the sparse-data band from meta.model.ci_widen (I-21).
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isScrolling } from "../../lib/scrollState";
 import { useStore } from "../../store/useStore";
 import { SectionGlow } from "../common/Reveal";
 import candlePhoto from "../../assets/nasa/candle-microgravity.jpg";
@@ -21,12 +22,16 @@ function useJourney(target: number | undefined, from: number) {
     if (target === undefined || prefersReduced()) return;
     cancelAnimationFrame(raf.current);
     const t0 = performance.now();
+    let last = 0;
     const tick = (t: number) => {
       const k = Math.min(1, (t - t0) / JOURNEY_MS);
+      if (k >= 1) { setShown(null); return; }
+      raf.current = requestAnimationFrame(tick);
+      // ~20 updates/s is smooth for a slow fade, and nothing re-renders while the page is being scrolled
+      if (t - last < 50 || isScrolling()) return;
+      last = t;
       const e = k < 0.5 ? 4 * k ** 3 : 1 - (-2 * k + 2) ** 3 / 2; // ease-in-out
       setShown(from + (target - from) * e);
-      if (k < 1) raf.current = requestAnimationFrame(tick);
-      else setShown(null);
     };
     raf.current = requestAnimationFrame(tick);
   }, [target, from]);
@@ -95,7 +100,7 @@ export function Gravity() {
             <img src={candlePhoto} alt="Real candle flame in microgravity: a dim blue dome with no rising tip" loading="lazy" className="h-full w-full object-cover" />
           </span>
           <figcaption className="num mt-1 whitespace-nowrap text-[9px] uppercase tracking-widest text-cool/80">Cam 01 · NASA</figcaption>
-          <span role="tooltip" className="pointer-events-none absolute left-full top-0 ml-14 w-52 rounded-xl border border-white/10 bg-[#070B14]/95 p-3 text-left text-[12px] leading-snug text-dim opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100">
+          <span role="tooltip" className="pointer-events-none absolute right-0 top-full mt-12 w-52 rounded-xl sm:right-auto sm:left-full sm:top-0 sm:mt-0 sm:ml-14 border border-white/10 bg-[#070B14]/95 p-3 text-left text-[12px] leading-snug text-dim opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100">
             <b className="text-white">The real thing.</b> A candle burning in microgravity: no rising tip, a dim blue dome, very little soot.
             <span className="num mt-1 block text-[10px] uppercase tracking-wider">Photo: NASA · Candle Flames in Microgravity</span>
           </span>

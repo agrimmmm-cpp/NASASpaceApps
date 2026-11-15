@@ -5,7 +5,7 @@ import { passportUseful } from "./sections/Passport";
 
 const NAV = [
   ["#gravity", "Gravity"], ["#status", "Risk"], ["#danger", "Danger"],
-  ["#earth-vs-space", "Earth vs Space"], ["#passport", "Passport"], ["#experiments", "Experiments"],
+  ["#earth-vs-space", "Earth vs Space"], ["#passport", "Passport"], ["#experiments", "Experiments"], ["#investigations", "Research"],
 ] as const;
 
 /** Elapsed time since the page opened — a session clock, not real mission data. */

@@ -5,6 +5,9 @@ import { useStore } from "../store/useStore";
 import { dataLimits, verdict } from "./AboutModal";
 import { outcomeText } from "./sections/Experiments";
 import { passportUseful } from "./sections/Passport";
+import { INVESTIGATIONS } from "../content/investigations";
+import { rankInvestigations } from "../lib/rankInvestigations";
+import { confidence } from "../lib/confidence";
 import { shapRows } from "../lib/shapText";
 import { fmtCi, fmtGravity, fmtPct, fmtTemp, fmtTtc } from "../lib/format";
 import { survivalProbability } from "../lib/survival";
@@ -38,6 +41,9 @@ export function MissionReport() {
   const closest = (ins?.retrieved_run_ids ?? []).map((id) => byId.get(id)).filter((r): r is Run => !!r);
   const m = meta.model;
   const showCompare = cmp && (m.capabilities.gravity_effect || cmp.data_source === "mock");
+  const runsIn = (e: string) => (s.runs.data?.runs ?? []).filter((r) => r.experiment === e).length;
+  const research = rankInvestigations(INVESTIGATIONS, { label: vehicle, ...p.scenario }, null, runsIn).slice(0, 5);
+  const conf = confidence(p, meta);
   const H = ({ children }: { children: string }) => <h2 className="mb-2 mt-6 border-b border-[#ccc] pb-1 text-[15px] font-bold">{children}</h2>;
 
   return (
@@ -100,6 +106,24 @@ export function MissionReport() {
           ))}</tbody>
         </table>
       </>)}
+
+<H>How sure is this prediction?</H>
+      <p><b>{conf.level === "high" ? "High" : conf.level === "medium" ? "Medium" : "Low"} confidence</b> ({conf.points}/{conf.max}) ·
+        {p.matching_runs === 0 ? " no real runs close to these conditions (extrapolated)" : ` ${p.matching_runs} real runs close to these conditions`} ·
+        likely range ±{Math.round(conf.relWidth * 50)}%{p.ci_widened ? " (widened: sparse data at this gravity)" : ""}</p>
+
+      <H>NASA research most relevant to this habitat</H>
+      <table className="w-full text-[11px]">
+        <thead><tr className="text-left text-[#555]"><th>#</th><th>Investigation</th><th>Role</th><th>Why it ranks here</th></tr></thead>
+        <tbody>{research.map(({ inv, reasons }, i) => (
+          <tr key={inv.id} className="border-t border-[#eee] align-top">
+            <td className="py-0.5">{i + 1}</td>
+            <td className="py-0.5"><b>{inv.name}</b> · {inv.full}</td>
+            <td>{inv.pillars.length ? inv.pillars.join(", ") : "foundational"}</td>
+            <td>{reasons[0] ?? "—"}</td>
+          </tr>
+        ))}</tbody>
+      </table>
 
       {closest.length > 0 && (<>
         <H>Closest experiment runs</H>

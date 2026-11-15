@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 import { useThree } from "@react-three/fiber";
 
-let lastScroll = 0;
-if (typeof window !== "undefined") window.addEventListener("scroll", () => { lastScroll = performance.now(); }, { passive: true });
+import { isScrolling } from "../../lib/scrollState";
 
 export function Ticker({ fps = 30, pauseOnScroll = true }: { fps?: number; pauseOnScroll?: boolean }) {
   const invalidate = useThree((s) => s.invalidate);
@@ -13,7 +12,7 @@ export function Ticker({ fps = 30, pauseOnScroll = true }: { fps?: number; pause
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       if (document.hidden || now - last < 1000 / fps - 1) return;
-      if (pauseOnScroll && now - lastScroll < 160) return;
+      if (pauseOnScroll && isScrolling()) return;
       last = now;
       invalidate();
     };
