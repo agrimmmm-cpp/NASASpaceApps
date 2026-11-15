@@ -100,13 +100,13 @@ Required trends (each has a unit test that checks the sign/shape on the generate
 | M-1 | Spread rate increases with O₂ % (solids), monotone in the mean over O₂ bins | Spearman ρ(o2, spread) > 0.5 for PMMA at g=0 |
 | M-2 | Spread rate increases with pressure | ρ(pressure, spread) > 0.2 |
 | M-3 | In 0g, spread rises with airflow to a peak at ~10–20 cm/s then falls (blow-off) | peak bin of mean spread in [10, 20]; mean at 45–50 cm/s < peak by ≥ 30% |
-| M-4 | At 0g with airflow < 3 cm/s, extinction probability high, higher still at O₂ 15–18% | extinguished rate in that cell ≥ 0.6, and > rate at O₂ ≥ 25 |
+| M-4 | At 0g with airflow < 3 cm/s, extinction probability high, higher still at low O₂ | at g=0, airflow < 3, O₂ ≤ 21: extinguished rate ≥ 0.6 (≥ 8 rows), and higher than at O₂ ≥ 25 |
 | M-5 | 0g flames cooler: ~1200–1500 K vs 1g ~1800–2000 K | mean(T@0g) < mean(T@1g) − 250 K |
 | M-6 | At O₂ ≥ 30%, extinction is rare at any gravity | rate ≤ 0.1 |
 | M-7 | Noise: multiplicative lognormal σ≈0.12 on spread, Gaussian σ≈40 K on temp | — |
 
 Composition: ~65% at g=0.0; ~25% at g=1.0 (experiment `Ground`); ~10% at partial g (0.17, 0.38). Experiments/materials pair realistically:
-BASS/BASS-II/Saffire → solids, FLEX/FLEX-2 → droplets, ACME → gas, Ground → any. `run_id = <experiment>-<3-digit counter>` unique.
+BASS/BASS-II/Saffire → solids, FLEX/FLEX-2 → droplets, ACME → gas, Ground → any. `run_id = <prefix>-<3-digit counter>`, unique; prefix = experiment name except `Ground`→`GRND`, `Saffire`→`SAF`.
 Extinguished rows record `spread_rate_mm_s` at the point of extinction (small, ≥ 0, never null). Every `source_note` begins `[MOCK]`.
 The generator refuses to run if `data/combustion_runs.csv` exists (nothing to mock) unless `--force-mock` is passed, and **never** writes to `combustion_runs.csv`.
 
@@ -118,3 +118,4 @@ The generator refuses to run if `data/combustion_runs.csv` exists (nothing to mo
 
 ## Changelog
 - 2026-11-14 initial.
+- 2026-11-14 (Track A) M-4 cell made precise (airflow < 3, O₂ ≤ 21); run_id prefixes for Ground/Saffire; mock generator oversamples low airflow and low O₂ so those cells have enough rows.
