@@ -57,6 +57,10 @@ class AskRequest(_Base):
     scenario: Scenario
 
 
+class TTSRequest(_Base):
+    text: str = Field(min_length=1, max_length=800)  # Nova's answers are <= 120 words (contract /api/ask)
+
+
 class PassportRequest(_Base):
     o2_percent: float = Field(**_rng("o2_percent"))
     pressure_kpa: float = Field(**_rng("pressure_kpa"))

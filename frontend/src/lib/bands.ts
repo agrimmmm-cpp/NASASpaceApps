@@ -19,3 +19,7 @@ export function bandFor(risk: number, bands: { band: RiskBand; min: number; max:
   }
   return bands[bands.length - 1].band;
 }
+
+/** Plain-language zone names for non-experts (shown alongside the band, never instead of the number). */
+export const PLAIN_BAND: Record<RiskBand, string> = { low: "Safe", elevated: "Caution", high: "Danger", critical: "Extreme" };
+export const BAND_RANK: Record<RiskBand, number> = { low: 0, elevated: 1, high: 2, critical: 3 };
