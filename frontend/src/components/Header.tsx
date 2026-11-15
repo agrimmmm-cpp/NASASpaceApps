@@ -22,6 +22,7 @@ export function Header() {
   const compareSource = useStore((s) => s.compare.data?.data_source);
   const mode = useStore((s) => s.mode);
   const setMode = useStore((s) => s.setMode);
+  const setAboutOpen = useStore((s) => s.setAboutOpen);
   const clock = useSessionClock();
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[var(--space)]/85 backdrop-blur-md">
@@ -67,6 +68,10 @@ export function Header() {
               </button>
             ))}
           </div>
+          <button onClick={() => setAboutOpen(true)}
+            className="num whitespace-nowrap rounded border border-white/15 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-dim hover:border-cool/50 hover:text-white">
+            About
+          </button>
         </div>
       </div>
     </header>

@@ -40,6 +40,7 @@ interface State extends Partial<Scenario> {
   insights: Async<InsightsResponse>;
   selectedRunId: string | null;
   chatOpen: boolean;
+  aboutOpen: boolean;
 
   init(): Promise<void>;
   setScenario(patch: Partial<Scenario>): void;
@@ -47,6 +48,7 @@ interface State extends Partial<Scenario> {
   retry(slice: Slice | "meta" | "runs"): void;
   selectRun(id: string | null): void;
   setChatOpen(open: boolean): void;
+  setAboutOpen(open: boolean): void;
   setMode(mode: "explore" | "command"): void;
 }
 
@@ -156,6 +158,7 @@ export const useStore = create<State>((set, get) => {
     insights: idle(),
     selectedRunId: null,
     chatOpen: false,
+    aboutOpen: false,
 
     async init() {
       const st = get().meta.status;
@@ -204,6 +207,7 @@ export const useStore = create<State>((set, get) => {
 
     selectRun: (id) => set({ selectedRunId: id }),
     setChatOpen: (open) => set({ chatOpen: open }),
+    setAboutOpen: (open) => set({ aboutOpen: open }),
     setMode: (mode) => set({ mode }),
   };
 });
