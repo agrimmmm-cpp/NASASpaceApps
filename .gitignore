@@ -1,0 +1,25 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+backend/.venv/
+
+# model artifacts and reports (regenerated)
+backend/models/*.joblib
+backend/data_report.json
+
+# data
+data/raw/
+
+# node
+node_modules/
+frontend/dist/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/

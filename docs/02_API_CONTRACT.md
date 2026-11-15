@@ -91,7 +91,7 @@ interface Meta {
     weights: { spread: number; survival: number };   // 0.6 / 0.4
     critical_length_mm: number;         // used for time_to_critical (100)
     ci_widen: { g_min: number; g_max: number; factor: number };  // 0.05, 0.95, 1.5
-    metrics: { spread_r2: number; temp_r2: number; extinction_auc: number; n_train: number };
+    metrics: { spread_r2: number | null; temp_r2: number | null; extinction_auc: number | null; n_train: number | null };  // null = not available (no model yet / undefined)
     stub: boolean;
   };
   llm_enabled: boolean;                 // false if no key → UI shows "template insights" note
@@ -272,4 +272,5 @@ a short summary of the retrieved runs plus the prediction.
 6. I-11: stub the LLM to return a made-up run id → it's dropped; if all dropped → `generated_by: "template"`.
 
 ## Changelog
+- 2026-11-14 (Track A) `meta.model.metrics` fields are nullable (null in stub mode / before training). Frontend: show "—".
 - 2026-11-14 initial. Deviations from the original brief: added `/api/health`, `flame_temp_k` and `risk_band`/`shap_base`/`ci_widened`/`scenario` echo on predict; `/api/insights` body is `{scenario}` only; `material.id` canonical vs label.
