@@ -7,12 +7,13 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import config
 import errors
 import ai
+import tts
 import model as model_mod
 import services
 from data_loader import load_csv, load_dataset, records
@@ -20,7 +21,7 @@ from errors import model_not_ready
 from predictor import ToyPredictor
 from schemas import (AdviseRequest, AdviseResponse, AskRequest, AskResponse, CompareRequest, Compare, Health, Heatmap,
                      HeatmapRequest, InsightsRequest, InsightsResponse, Meta, Passport, PassportRequest, Prediction,
-                     RunsResponse, Scenario)
+                     RunsResponse, Scenario, TTSRequest)
 from services import ACTION_IDS, AppState
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
@@ -186,6 +187,16 @@ def ask(body: AskRequest, request: Request):
     sc = body.scenario.model_dump()
     services.check_material(st, sc["material"])
     return ai.ask(st, sc, services.predict_one(st, sc), body.question)
+
+
+@app.post("/api/tts", responses={200: {"content": {"audio/wav": {}}}})
+def text_to_speech(body: TTSRequest):
+    """Nova's voice (Gemini TTS). 503 + envelope when unavailable; the frontend then uses the browser voice."""
+    try:
+        audio, mime = tts.synthesize(body.text)
+    except tts.TTSUnavailable:
+        raise errors.ApiException("INTERNAL", "Voice unavailable right now; using the browser voice instead.", 503)
+    return Response(content=audio, media_type=mime, headers={"Cache-Control": "private, max-age=3600"})
 
 
 @app.post("/api/passport", response_model=Passport)

@@ -273,6 +273,7 @@ a short summary of the retrieved runs plus the prediction.
 6. I-11: stub the LLM to return a made-up run id → it's dropped; if all dropped → `generated_by: "template"`.
 
 ## Changelog
+- 2026-11-15 (Track B, pending Track A review) **New endpoint** `POST /api/tts` — body `{ text: string (1–800 chars) }`; 200 returns `audio/wav` (Gemini text-to-speech, key stays on the backend, cached, 20 calls/min); 503 with the error envelope (`INTERNAL`) when no key / Gemini fails / rate-limited — the UI then uses the browser voice. Env: `TTS_MODEL` (default `gemini-3.8-flash-lite-tts`), `TTS_VOICE` (default `Kore`), `TTS_TIMEOUT_S` (15), `TTS_PROVIDER`. Tests: `backend/tests/test_tts.py`.
 - 2026-11-15 (Track B, pending Track A review) `/api/compare` on data with `capabilities.gravity_effect = false`: if the mock data also has the material, the answer comes from a mock-trained **reference model** and `data_source` is `"mock"` (I-09); the UI labels it SIMULATED. Otherwise unchanged (identical sides, real `data_source`). No other endpoint uses the reference. Test: `test_api_compare_uses_labelled_mock_reference_when_real_data_has_no_gravity`.
 - 2026-11-14 (Track A) `meta.model.metrics` fields are nullable (null in stub mode / before training). Frontend: show "—".
 - 2026-11-14 initial. Deviations from the original brief: added `/api/health`, `flame_temp_k` and `risk_band`/`shap_base`/`ci_widened`/`scenario` echo on predict; `/api/insights` body is `{scenario}` only; `material.id` canonical vs label.
