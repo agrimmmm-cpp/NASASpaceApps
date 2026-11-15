@@ -1,0 +1,46 @@
+{
+  "scenario": {
+    "material": "PMMA",
+    "o2_percent": 21.0,
+    "pressure_kpa": 101.3,
+    "airflow_cm_s": 10.0,
+    "gravity_g": 0.0
+  },
+  "spread_rate_mm_s": 0.82,
+  "spread_rate_ci": [
+    0.51,
+    1.24
+  ],
+  "ci_widened": false,
+  "flame_temp_k": 1385,
+  "extinction_probability": 0.31,
+  "risk_index": 35.8,
+  "risk_band": "elevated",
+  "time_to_critical_s": 122.0,
+  "shap": [
+    {
+      "feature": "o2_percent",
+      "contribution": 6.2
+    },
+    {
+      "feature": "airflow_cm_s",
+      "contribution": -3.1
+    },
+    {
+      "feature": "gravity_g",
+      "contribution": -2.4
+    },
+    {
+      "feature": "pressure_kpa",
+      "contribution": 1.1
+    },
+    {
+      "feature": "material",
+      "contribution": 0.4
+    }
+  ],
+  "shap_base": 34.0,
+  "matching_runs": 14,
+  "data_source": "mock",
+  "model_version": "2026-11-14T00:00:00Z-a1b2c3d4"
+}

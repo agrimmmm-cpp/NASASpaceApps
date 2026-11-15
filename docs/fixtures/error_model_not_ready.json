@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "MODEL_NOT_READY",
+    "message": "Model is still training, retry shortly"
+  }
+}

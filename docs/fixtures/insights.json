@@ -1,0 +1,40 @@
+{
+  "scenario": {
+    "material": "PMMA",
+    "o2_percent": 21.0,
+    "pressure_kpa": 101.3,
+    "airflow_cm_s": 10.0,
+    "gravity_g": 0.0
+  },
+  "insights": [
+    {
+      "text": "[Template] In the closest runs at 0 g and ~21% O2, PMMA flames spread at about 0.7-0.9 mm/s.",
+      "cited_run_ids": [
+        "BASS-II-042",
+        "BASS-II-051"
+      ]
+    },
+    {
+      "text": "[Template] The nearest 1 g reference run burned hotter than the nearest 0 g runs.",
+      "cited_run_ids": [
+        "GRND-007",
+        "BASS-017"
+      ]
+    },
+    {
+      "text": "[Template] 1 of the 5 closest runs self-extinguished; low airflow is the common factor.",
+      "cited_run_ids": [
+        "BASS-II-033"
+      ]
+    }
+  ],
+  "retrieved_run_ids": [
+    "BASS-II-042",
+    "BASS-II-051",
+    "BASS-017",
+    "GRND-007",
+    "BASS-II-033"
+  ],
+  "generated_by": "template",
+  "data_source": "mock"
+}

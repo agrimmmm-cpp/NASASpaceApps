@@ -1,0 +1,25 @@
+{
+  "scenario": {
+    "material": "PMMA",
+    "o2_percent": 16.0,
+    "pressure_kpa": 101.3,
+    "airflow_cm_s": 1.0,
+    "gravity_g": 0.17
+  },
+  "spread_rate_mm_s": 0.02,
+  "spread_rate_ci": [
+    0.0,
+    0.09
+  ],
+  "ci_widened": true,
+  "flame_temp_k": 1385,
+  "extinction_probability": 0.93,
+  "risk_index": 3.0,
+  "risk_band": "low",
+  "time_to_critical_s": null,
+  "shap": [],
+  "shap_base": 3.0,
+  "matching_runs": 0,
+  "data_source": "mock",
+  "model_version": "2026-11-14T00:00:00Z-a1b2c3d4"
+}

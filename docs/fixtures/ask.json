@@ -1,0 +1,16 @@
+{
+  "answer": "[Template] In the 5 closest runs, PMMA kept burning at 21% O2 when airflow was at least 8 cm/s.",
+  "cited_run_ids": [
+    "BASS-II-042",
+    "BASS-II-051"
+  ],
+  "retrieved_run_ids": [
+    "BASS-II-042",
+    "BASS-II-051",
+    "BASS-017",
+    "GRND-007",
+    "BASS-II-033"
+  ],
+  "generated_by": "template",
+  "data_source": "mock"
+}

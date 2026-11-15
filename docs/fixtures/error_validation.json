@@ -1,0 +1,12 @@
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "o2_percent must be between 15 and 40",
+    "details": {
+      "field": "o2_percent",
+      "min": 15,
+      "max": 40,
+      "got": 55
+    }
+  }
+}
