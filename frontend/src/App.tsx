@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "./store/useStore";
 import { Header } from "./components/Header";
 import { TelemetryBar } from "./components/TelemetryBar";
@@ -21,6 +21,20 @@ import { HowItWorks } from "./components/sections/HowItWorks";
 import { NasaMissions } from "./components/sections/NasaMissions";
 import { CommandTeaser } from "./components/command/CommandTeaser";
 
+/** Shown while /api/meta is loading. After a few seconds it explains the free-hosting wake-up instead of looking broken. */
+function WakingUp() {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => { const id = setInterval(() => setSecs((x) => x + 1), 1000); return () => clearInterval(id); }, []);
+  if (secs < 4) return <span className="text-dim">Connecting to mission server…</span>;
+  const frac = Math.min(1, secs / 60);
+  return (
+    <span className="inline-flex flex-col items-center gap-1.5 text-[#FFB873]">
+      <span>🛰 Waking up the mission server — free hosting sleeps when idle, this takes up to a minute ({secs}s)</span>
+      <span className="block h-1 w-64 overflow-hidden rounded bg-white/10"><span className="block h-full bg-[#FFB873] transition-[width] duration-1000" style={{ width: `${frac * 100}%` }} /></span>
+    </span>
+  );
+}
+
 export default function App() {
   const init = useStore((s) => s.init);
   const meta = useStore((s) => s.meta);
@@ -42,7 +56,7 @@ export default function App() {
               Can't reach the mission server: {meta.error?.message}
               <button className="ml-3 rounded border border-white/20 px-2 py-0.5 text-xs uppercase" onClick={() => retry("meta")}>Retry</button>
             </span>
-          ) : <span className="text-dim">Connecting to mission server…</span>}
+          ) : <WakingUp />}
         </div>
       )}
       {mode === "command" ? (

@@ -26,7 +26,7 @@ Free tier sleeps after ~15 min idle; the first visit then takes 30–60 s. **Ope
 2. **Gravity (8 s)** — drag the gravity slider Earth → microgravity, the flame morphs.
 3. **Prediction + honesty (12 s)** — Risk dial; scroll to "How sure are we?" → Low → **Jump to real data** → confidence rises. "It tells you when it's guessing."
 4. **Danger map (8 s)** — the plain verdict + "Try the safer option".
-5. **Investigation Explorer (15 s)** — pick **Lunar Habitat**: high-O₂ and partial-gravity research jumps to the top; filter Detection; compare two; **Ask Nova** → grounded answer citing FLEX runs; Download CSV.
+5. **Research (15 s)** — pick **Lunar Habitat**: the "Why so much oxygen?" note appears and the top pick changes; open Details on FLEX (real droplet sizes); compare two; **Ask Nova** → answer citing FLEX runs.
 6. **Command Mode (15 s)** — IGNITE, grab the extinguisher, knock the fire down; show it spreading if you wait.
 7. **Close (5 s)** — "Built on NASA PSI data: FLEX and Saffire-II. Research and education tool — not operational guidance."
 
@@ -37,11 +37,14 @@ Free tier sleeps after ~15 min idle; the first visit then takes 30–60 s. **Ope
 **One-line summary:** An AI-powered mission-control dashboard that turns NASA's microgravity combustion experiments into clear, honest fire-safety insights for spacecraft, stations and Moon/Mars habitats.
 
 **What it does**
-- **Summarizes and ranks NASA combustion investigations** (BASS, Saffire, SAME, FLEX, FLEX-2, CFI, ACME's BRE / CFI-G / E-FIELD, SPICE, SLICE) by relevance to a chosen habitat (ISS, Gateway, Lunar Habitat, Mars Transit) and by fire-safety role: prevention, detection, suppression. Side-by-side comparison, AI summaries, Earth spin-offs.
-- **Predicts fire behaviour** for any cabin condition (oxygen, pressure, airflow, gravity) with a machine-learning model trained on 190 real runs from NASA PSI (FLEX: 182 heptane/methanol droplet runs; Saffire-II: 8 large-scale material fires): burning rate with a likely range, chance the flame keeps burning, a risk index, and a danger map across oxygen × airflow.
-- **Interprets** every prediction in plain language (what drives the risk, a safer nearby option), cites the exact NASA runs behind it, and shows **how sure it is** (nearby real runs, range width, held-out model accuracy), with a jump to the closest real experiment.
-- **Extracts data** for further modeling: CSV download of the runs behind the model.
-- **Command Mode:** a first-person, real-time fire emergency in a 3D station module where flame growth comes from the model — a training/outreach tool that makes the physics tangible.
+- **Summarizes and ranks NASA's combustion investigations for your habitat.** Pick the ISS, Artemis Gateway, a Lunar Habitat (34 % O₂, 56.5 kPa), a Mars transit ship or your own settings: 12 PSI investigations (BASS, Saffire, SAME, DAFT, FLEX, FLEX-2, CFI, ACME's BRE / CFI-G / E-FIELD, SPICE, SLICE) re-rank by that habitat's oxygen, pressure, airflow and gravity, each with the reason. Every one is tagged prevention / detection / suppression, says what safety equipment it informs, links to its NASA PSI record, and can be summarized by the AI or compared side by side. FLEX and Saffire-II show real sample sizes, test ranges and measurements from NASA's tables.
+- **Predicts fire behaviour** for any cabin with a machine-learning model trained on 190 real runs from NASA PSI (FLEX: 182 heptane/methanol droplet runs; Saffire-II: 8 large-scale material fires): burning rate with a likely range, chance the flame keeps burning, a risk index, and a danger map across oxygen × airflow.
+- **Interprets** every prediction in plain language (what drives the risk, a safer option to try), cites the exact NASA runs, and shows **how sure it is** (nearby real runs, range width, held-out accuracy) with a jump to the closest real experiment.
+- **Explains its own pipeline** ("How it works"): rows read vs. used and why, facts verified in NASA papers, the model, and what the data can't tell you.
+- **Extracts data** for further modeling (CSV of all runs) and a printable fire-safety report that includes the habitat's top research.
+- **Command Mode:** a first-person, real-time fire emergency in a 3D station module. Grab the extinguisher and aim; hesitate and the fire spreads to the racks. Flame growth comes from the model; spread and scoring are labelled game rules.
+- **Fire safety on Earth:** NASA spin-offs (fine-water-mist extinguishers, smoke detection, firefighter gear).
+- A 1-minute "Start here" tour, works on phones (touch controls in the game), and runs offline except for the optional AI.
 
 **Use of AI**
 - Gradient-boosting models (scikit-learn) with SHAP explanations, trained on NASA PSI data.

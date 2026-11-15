@@ -3,6 +3,7 @@
 // to the racks; smoke fills the module as damage builds. Rules live in src/sim/game.ts (model-driven growth and
 // self-extinction; everything else is a labelled game rule). Lazy-loaded (three.js).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { Scenario } from "../../types";
@@ -302,10 +303,16 @@ export default function GameView(p: GameViewProps) {
     : live.length > 1 ? "The fire spread! Knock down the new fires before they grow."
     : !input.current.spraying ? "Hold the mouse button (or Space) on the flame to spray." : null;
 
-  return (
+  return createPortal((
     <div className="fixed inset-0 z-[80] select-none bg-black" role="application" aria-label="Fire drill">
       <div className={`absolute inset-0 ${game.equipped && running ? "cursor-crosshair" : hover ? "cursor-pointer" : ""}`}
-        onPointerDown={(e) => { if (e.button !== 0) return; const h = input.current.hovered; if (h && !(h === "ext" && game.equipped)) operate(h); else startSpray(); }}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          const h = input.current.hovered;
+          // with the extinguisher in hand, aiming at a fire always sprays (the first fire floats in front of the hatch)
+          if (game.equipped && (input.current.target !== null || !h || h === "ext")) startSpray();
+          else if (h) operate(h); else startSpray();
+        }}
         onPointerUp={stopSpray} onPointerLeave={stopSpray}>
         <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0.1, 5.4], fov: 64, near: 0.05, far: 40 }} gl={{ antialias: true, powerPreference: "high-performance" }}>
           <GameScene game={game} input={input} airMax={p.lim.airMax} o2Max={p.lim.o2Max} />
@@ -377,7 +384,7 @@ export default function GameView(p: GameViewProps) {
       )}
 
       {/* hovered equipment label */}
-      {hover && running && !(hover === "ext" && game.equipped) && (
+      {hover && running && !(hover === "ext" && game.equipped) && !(game.equipped && input.current.target !== null) && (
         <div className="num pointer-events-none absolute left-1/2 top-[38%] -translate-x-1/2 rounded bg-black/75 px-2.5 py-1 text-[12px] text-white">
           {NAMES[hover]} — click or press <b className="text-[#FFB873]">{KEYS[hover]}</b>
           {hover === "hatch" && armHatch && <span className="ml-2 text-danger">click again to evacuate</span>}
@@ -424,7 +431,7 @@ export default function GameView(p: GameViewProps) {
       {/* ---- debrief ---- */}
       {!running && <Debrief game={game} best={best} newBest={newBest} onAgain={p.onExit} />}
     </div>
-  );
+  ), document.body);
 }
 
 function Debrief({ game, best, newBest, onAgain }: { game: G.GameState; best: number | null; newBest: boolean; onAgain(): void }) {

@@ -28,7 +28,8 @@ const DEPS: Record<Slice, Key[]> = {
 };
 const DEBOUNCE_MS: Record<Slice, number> = { prediction: 300, heatmap: 300, compare: 300, insights: 800, passport: 300 };
 const WARMUP_RETRY_MS = 2000;
-const WARMUP_MAX_MS = 60000;
+const WARMUP_MAX_MS = 180000; // model training on a slow free-tier CPU can take a few minutes
+const WAKE_MAX_MS = 120000;  // sleeping free-tier server: keep retrying /api/meta this long
 
 interface State extends Partial<Scenario> {
   vehicle_id: string | null;
@@ -119,21 +120,22 @@ export const useStore = create<State>((set, get) => {
 
   async function loadMeta() {
     set({ meta: { ...get().meta, status: "loading" } });
-    // 05 §3: retry 3× with backoff if the backend isn't up yet
-    for (let attempt = 0; attempt < 4; attempt++) {
+    // 05 §3: retry with backoff while the backend comes up. Free hosting sleeps when idle and needs up to a minute
+    // to wake, so keep trying for WAKE_MAX_MS (the header shows a "waking up" message meanwhile) before erroring.
+    const t0 = Date.now();
+    for (let attempt = 0; ; attempt++) {
       try {
         const meta = await api.meta();
         set({ meta: { status: "ready", data: meta, error: null, requestId: get().meta.requestId + 1 } });
         return meta;
       } catch (e) {
-        if (attempt === 3) {
+        if (Date.now() - t0 > WAKE_MAX_MS) {
           set({ meta: { ...get().meta, status: "error", error: toErr(e) } });
           return null;
         }
-        await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+        await new Promise((r) => setTimeout(r, Math.min(3000, 500 * 2 ** attempt)));
       }
     }
-    return null;
   }
 
   async function loadRuns() {
