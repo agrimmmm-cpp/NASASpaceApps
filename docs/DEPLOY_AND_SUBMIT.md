@@ -34,6 +34,8 @@ Free tier sleeps after ~15 min idle; the first visit then takes 30–60 s. **Ope
 
 **Project name:** Fire Command: Zero-G
 
+**Demo video:** https://www.youtube.com/watch?v=hW-65ah_B58
+
 **One-line summary:** An AI-powered mission-control dashboard that turns NASA's microgravity combustion experiments into clear, honest fire-safety insights for spacecraft, stations and Moon/Mars habitats.
 
 **What it does**
