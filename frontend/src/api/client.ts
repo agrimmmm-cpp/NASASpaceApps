@@ -2,7 +2,7 @@
 // Every failure is normalised to ApiErrorBody so panels have one error shape to render.
 import type {
   ApiErrorBody, AskRequest, AskResponse, Compare, CompareRequest, Health, Heatmap, HeatmapRequest,
-  InsightsResponse, Meta, Prediction, RunsResponse, Scenario,
+  InsightsResponse, Meta, Passport, Prediction, RunsResponse, Scenario,
 } from "../types";
 
 export class ApiFailure extends Error {
@@ -71,6 +71,8 @@ export const api = {
     request<Heatmap>("/heatmap", { method: "POST", body, signal, check: has("risk", "o2_values", "airflow_values") }),
   compare: (body: CompareRequest, signal?: AbortSignal) =>
     request<Compare>("/compare", { method: "POST", body, signal, check: has("microgravity", "earth") }),
+  passport: (body: Omit<Scenario, "material">, signal?: AbortSignal) =>
+    request<Passport>("/passport", { method: "POST", body, signal, check: has("entries", "conditions") }),
   insights: (scenario: Scenario, signal?: AbortSignal) =>
     request<InsightsResponse>("/insights", { method: "POST", body: { scenario }, signal, check: has("insights") }),
   ask: (body: AskRequest, signal?: AbortSignal) =>

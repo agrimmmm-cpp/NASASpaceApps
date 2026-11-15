@@ -6,6 +6,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../../store/useStore";
 import { PanelShell } from "../common/PanelShell";
+import { Reveal, SectionGlow } from "../common/Reveal";
 import { RunChip, SourceTags } from "../common/RunChip";
 import { rateLabel, type RateLabel } from "../../lib/units";
 import type { Meta, Prediction, Run, RunsResponse } from "../../types";
@@ -109,6 +110,7 @@ function Chart({ runs, nearest, pred, rate, onPick }: { runs: Run[]; nearest: Se
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" onMouseLeave={() => setHover(null)}>
         <defs>
           <radialGradient id="you-glow"><stop offset="0%" stopColor="#fff" stopOpacity="0.9" /><stop offset="100%" stopColor="#fff" stopOpacity="0" /></radialGradient>
+          <filter id="star-glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2.4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
         </defs>
         {yt.map((t) => (
           <g key={`y${t}`}>
@@ -121,14 +123,16 @@ function Chart({ runs, nearest, pred, rate, onPick }: { runs: Run[]; nearest: Se
         <text x={14} y={(T + H - B) / 2} textAnchor="middle" fontSize="12" fill="#C9D3E3" transform={`rotate(-90 14 ${(T + H - B) / 2})`}>
           {rate.name} ({rate.unit})
         </text>
+        <g filter="url(#star-glow)">{/* one glow pass for all dots (was one filter per dot) */}
         {ordered.map((r) => {
           const near = nearest.has(r.run_id);
           return (
             <circle key={r.run_id} cx={X(r.o2_percent)} cy={Y(r.spread_rate_mm_s!)} r={near ? 6.5 : 4}
-              fill={colorOf(r)} fillOpacity={near ? 1 : 0.32} stroke={near ? "#fff" : "none"} strokeWidth={near ? 2 : 0}
+              fill={colorOf(r)} fillOpacity={near ? 1 : 0.45} stroke={near ? "#fff" : "none"} strokeWidth={near ? 2 : 0}
               className="cursor-pointer" onMouseEnter={() => setHover(r)} onClick={() => onPick(r.run_id)} />
           );
         })}
+        </g>
         {pred && (
           <g pointerEvents="none">
             <circle cx={X(pred.scenario.o2_percent)} cy={Y(pred.spread_rate_mm_s)} r="22" fill="url(#you-glow)" opacity="0.35" />
@@ -138,6 +142,10 @@ function Chart({ runs, nearest, pred, rate, onPick }: { runs: Run[]; nearest: Se
           </g>
         )}
       </svg>
+      {pred && (
+        <span aria-hidden className="ping-ring pointer-events-none absolute h-5 w-5 rounded-full border-2 border-white"
+          style={{ left: `${(X(pred.scenario.o2_percent) / W) * 100}%`, top: `${(Y(pred.spread_rate_mm_s) / H) * 100}%` }} />
+      )}
       {hover && (
         <div className="pointer-events-none absolute z-10 w-56 -translate-x-1/2 -translate-y-full rounded-xl border border-white/15 bg-[#070B14]/95 px-3 py-2 text-[12px] shadow-xl"
           style={{ left: `${(X(hover.o2_percent) / W) * 100}%`, top: `${(Y(hover.spread_rate_mm_s!) / H) * 100 - 3}%` }}>
@@ -219,6 +227,7 @@ export function Experiments() {
 
   return (
     <section id="experiments" className="relative z-10 flex min-h-screen flex-col justify-center px-6 py-24 md:px-12">
+      <SectionGlow colors={["#B48CFF", "#3DD9FF"]} />
       <div className="mx-auto w-full max-w-6xl">
         <span className="eyebrow text-cool">Experiments</span>
         <h2 className="mt-3 font-space text-4xl font-bold tracking-tight text-white md:text-5xl">What happened in real experiments like yours</h2>
@@ -227,7 +236,7 @@ export function Experiments() {
         </p>
 
         {/* 1. headline numbers */}
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <Reveal className="mt-10 grid gap-5 md:grid-cols-3">
           {s.runs.data ? (
             <>
               <Stat value={`${same.length}`} label={`${fuel ? `${fuel} ` : ""}experiment runs`} sub={exps.length ? `from ${exps.join(", ")}` : undefined} />
@@ -240,7 +249,7 @@ export function Experiments() {
               ) : <div className="skeleton h-full min-h-[120px] rounded-2xl" />}
             </>
           ) : [0, 1, 2].map((i) => <div key={i} className="skeleton h-32 rounded-2xl" />)}
-        </div>
+        </Reveal>
 
         {/* 2. chart + closest runs */}
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-12">

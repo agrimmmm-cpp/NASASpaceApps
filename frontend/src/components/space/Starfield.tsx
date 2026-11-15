@@ -27,9 +27,9 @@ export const Starfield = memo(function Starfield() {
       }}>
       <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
         {STARS.map((st, i) => (
-          <circle key={i} cx={st.x} cy={st.y} r={st.s * 0.06} className={st.tw ? "twinkle" : undefined}
+          <circle key={i} cx={st.x} cy={st.y} r={st.s * 0.06} /* no twinkle: animating a full-screen layer forced repaints under every panel */
             fill={st.blue ? "#B7EDFF" : "#FFFFFF"} opacity={st.o}
-            style={st.tw ? { animationDelay: `${(i % 7) * 0.5}s` } : undefined} />
+          />
         ))}
       </svg>
     </div>

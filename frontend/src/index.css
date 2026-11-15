@@ -19,16 +19,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Panels: no live backdrop blur. Re-blurring the fixed starfield behind every scrolling panel on every frame was
+   the main source of scroll lag; on a dark background a slightly more opaque fill looks nearly identical. */
 .glass {
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(13, 20, 36, 0.82);
   border: 1px solid var(--glass-border);
 }
 .glass-subtle {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -69,7 +67,7 @@ select { appearance: none; }
 @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
 .progress-line { animation: progress 1s ease-in-out infinite; }
 @keyframes flame-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.04); opacity: 0.92; } }
-.flame-pulse { animation: flame-pulse 2.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+.flame-pulse { animation: flame-pulse 2.6s ease-in-out infinite; transform-origin: center; will-change: transform, opacity; }
 @keyframes twinkle { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 .twinkle { animation: twinkle 3.5s ease-in-out infinite; }
 
@@ -89,3 +87,10 @@ select { appearance: none; }
   #mission-report { padding: 0; }
   #mission-report table { border-collapse: collapse; }
 }
+
+/* Compositor-only effects (transform/opacity) so animated overlays never force a big SVG or filter to redraw. */
+@keyframes scan-y { from { transform: translateY(-100%); } to { transform: translateY(var(--scan-h, 300px)); } }
+.scan-line { animation: scan-y 4.5s linear infinite; will-change: transform; }
+@keyframes ping-ring { 0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; } }
+.ping-ring { animation: ping-ring 1.8s ease-out infinite; will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) { .scan-line, .ping-ring { animation: none; display: none; } }

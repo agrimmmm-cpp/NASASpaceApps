@@ -18,6 +18,7 @@ const TIPS: [string, string][] = [
   ["#status", "Ask me why the risk is what it is."],
   ["#danger", "Click any cell to jump to that mix."],
   ["#earth-vs-space", "Same fire, two worlds — ask me about it!"],
+  ["#passport", "Which material would you fly? Check the grades! 🛡️"],
   ["#experiments", "Click a dot to see a real run."],
 ];
 

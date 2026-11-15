@@ -1,5 +1,6 @@
 // Section 5: Earth vs space split. Three separate numbers per side — never one shared axis for K and mm/s (05 §4).
 import { useStore } from "../../store/useStore";
+import { SectionGlow } from "../common/Reveal";
 import { fmtPct, fmtSpread, fmtTemp } from "../../lib/format";
 import { PanelShell } from "../common/PanelShell";
 import { Flame } from "../space/Flame";
@@ -35,6 +36,7 @@ export function Compare() {
   const label = meta?.materials.find((m) => m.id === material)?.label ?? material;
   return (
     <section id="earth-vs-space" className="relative z-10 flex min-h-screen flex-col justify-center px-6 py-24 md:px-12">
+      <SectionGlow colors={["#3DD9FF", "#FF9A1F"]} />
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-12 text-center">
           <span className="eyebrow text-[#FFB873]">Earth vs space</span>

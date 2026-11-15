@@ -4,6 +4,7 @@
 import { useStore } from "../store/useStore";
 import { dataLimits, verdict } from "./AboutModal";
 import { outcomeText } from "./sections/Experiments";
+import { passportUseful } from "./sections/Passport";
 import { shapRows } from "../lib/shapText";
 import { fmtCi, fmtGravity, fmtPct, fmtTemp, fmtTtc } from "../lib/format";
 import { survivalProbability } from "../lib/survival";
@@ -28,7 +29,7 @@ const Row = ({ k, v }: { k: string; v: string }) => (
 
 export function MissionReport() {
   const s = useStore();
-  const meta = s.meta.data, p = s.prediction.data, ins = s.insights.data, cmp = s.compare.data;
+  const meta = s.meta.data, p = s.prediction.data, ins = s.insights.data, cmp = s.compare.data, pass = s.passport.data;
   if (!meta || !p) return null;
   const vehicle = meta.vehicles.find((v) => v.id === s.vehicle_id)?.label ?? "Custom";
   const mat = meta.materials.find((m) => m.id === p.scenario.material);
@@ -85,6 +86,19 @@ export function MissionReport() {
           <tr><td className="py-0.5">Flame temperature</td><td>{fmtTemp(cmp.microgravity.flame_temp_k)}</td><td>{fmtTemp(cmp.earth.flame_temp_k)}</td></tr>
           <tr><td className="py-0.5">Chance it goes out</td><td>{fmtPct(cmp.microgravity.extinction_probability)}</td><td>{fmtPct(cmp.earth.extinction_probability)}</td></tr>
         </tbody></table>
+      </>)}
+
+      {passportUseful(pass) && pass && (<>
+        <H>Material passport (all materials, this cabin)</H>
+        <table className="w-full text-[11px]">
+          <thead><tr className="text-left text-[#555]"><th>Material</th><th>Grade</th><th>Risk</th><th>Keeps burning</th><th>Similar runs</th></tr></thead>
+          <tbody>{[...pass.entries].sort((a, b) => a.risk_index - b.risk_index).map((e) => (
+            <tr key={e.material} className="border-t border-[#eee]">
+              <td className="py-0.5 font-semibold">{e.label}</td><td>{e.grade}</td><td>{Math.round(e.risk_index)}/100</td>
+              <td>{fmtPct(survivalProbability(e.extinction_probability))}</td><td>{e.matching_runs === 0 ? "0 (extrapolated)" : e.matching_runs}</td>
+            </tr>
+          ))}</tbody>
+        </table>
       </>)}
 
       {closest.length > 0 && (<>

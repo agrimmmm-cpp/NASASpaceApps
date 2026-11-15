@@ -32,7 +32,8 @@ export function Flame({ gravity, intensity = 0.5, size = 160 }: { gravity: numbe
   const halo = mix("#2D6BFF", "#FF6A1A", t);
   const glow = 0.35 + 0.45 * Math.min(1, Math.max(0, intensity));
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${v} ${v}`} role="img"
+    // the pulse animates the whole <svg> (GPU transform) instead of a filtered group inside it, so nothing is re-rendered per frame
+    <svg width={size} height={size} viewBox={`0 0 ${v} ${v}`} role="img" className="flame-pulse"
       aria-label={t < 0.05 ? "Spherical microgravity flame" : `Flame at ${t.toFixed(2)} g`}>
       <defs>
         <radialGradient id={`f${id}`} cx="50%" cy={`${lerp(50, 62, t)}%`} r="60%">
@@ -48,7 +49,7 @@ export function Flame({ gravity, intensity = 0.5, size = 160 }: { gravity: numbe
         </filter>
       </defs>
       <circle cx="50" cy="52" r={lerp(30, 26, t)} fill={halo} opacity={glow * 0.55} filter={`url(#h${id})`} />
-      <g className="flame-pulse">
+      <g>
         <path d={shapePath(t, r, 50)} fill={`url(#f${id})`} filter={`url(#b${id})`} opacity={lerp(0.8, 1, t)} />
         <ellipse cx="50" cy={lerp(50, 60, t)} rx={r * 0.35} ry={r * lerp(0.35, 0.5, t)} fill={core} opacity="0.85"
           filter={`url(#b${id})`} />
