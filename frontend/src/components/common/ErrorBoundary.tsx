@@ -1,7 +1,7 @@
 // I-22: a render exception in one panel never takes down another.
 import { Component, type ReactNode } from "react";
 
-interface Props { name: string; children: ReactNode }
+interface Props { name: string; children: ReactNode; fallback?: ReactNode }
 interface State { failed: boolean }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -13,6 +13,7 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error(`[${this.props.name}] render error`, err);
   }
   render() {
+    if (this.state.failed && this.props.fallback !== undefined) return this.props.fallback;
     if (this.state.failed) {
       return (
         <div className="flex h-full flex-col items-start gap-2 p-4 text-sm">
