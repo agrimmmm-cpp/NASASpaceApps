@@ -273,6 +273,7 @@ a short summary of the retrieved runs plus the prediction.
 6. I-11: stub the LLM to return a made-up run id → it's dropped; if all dropped → `generated_by: "template"`.
 
 ## Changelog
+- 2026-11-15 (Track B, pending Track A review) `/api/compare` on data with `capabilities.gravity_effect = false`: if the mock data also has the material, the answer comes from a mock-trained **reference model** and `data_source` is `"mock"` (I-09); the UI labels it SIMULATED. Otherwise unchanged (identical sides, real `data_source`). No other endpoint uses the reference. Test: `test_api_compare_uses_labelled_mock_reference_when_real_data_has_no_gravity`.
 - 2026-11-14 (Track A) `meta.model.metrics` fields are nullable (null in stub mode / before training). Frontend: show "—".
 - 2026-11-14 initial. Deviations from the original brief: added `/api/health`, `flame_temp_k` and `risk_band`/`shap_base`/`ci_widened`/`scenario` echo on predict; `/api/insights` body is `{scenario}` only; `material.id` canonical vs label.
 - 2026-11-15 (Track A) **UI-affecting:** `flame_temp_k` is `number | null` on Prediction, CompareSide and PassportEntry; `meta.model.capabilities {flame_temp, gravity_effect}` added. On mock data temperature is always a number and both capabilities are true; on the real NASA data (`data/SOURCES.md`) temperature is null and both are false. Fixtures: `*_real_data.json`.

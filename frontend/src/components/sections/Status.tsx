@@ -2,9 +2,10 @@
 import type { ReactNode } from "react";
 import { useStore } from "../../store/useStore";
 import { BAND_COLOR, BAND_LABEL } from "../../lib/bands";
-import { fmtCi, fmtPct, fmtSpread, fmtTtc } from "../../lib/format";
+import { fmtCi, fmtNum, fmtPctNum, fmtRisk, fmtTtc } from "../../lib/format";
 import { survivalProbability } from "../../lib/survival";
 import { PanelShell } from "../common/PanelShell";
+import { NumberTicker } from "../common/NumberTicker";
 import type { Meta, Prediction } from "../../types";
 
 function Dial({ p, meta }: { p: Prediction; meta: Meta | null }) {
@@ -26,7 +27,7 @@ function Dial({ p, meta }: { p: Prediction; meta: Meta | null }) {
       </svg>
       <div className="flex flex-col items-center">
         <span className="label">Risk index</span>
-        <span className="num text-8xl font-bold leading-none" style={{ color }}>{Math.round(p.risk_index)}</span>
+        <span className="num text-8xl font-bold leading-none" style={{ color }}><NumberTicker value={p.risk_index} format={fmtRisk} /></span>
         <span className="num mt-4 rounded-full border px-4 py-1.5 text-[13px] font-semibold uppercase tracking-wider"
           style={{ color, borderColor: color, background: "rgba(255,255,255,0.03)" }}>
           / 100 · {BAND_LABEL[p.risk_band]}
@@ -68,13 +69,14 @@ export function Status() {
             <div className="grid items-center gap-8 lg:grid-cols-12">
               <div className="glass rounded-2xl p-8 lg:col-span-5"><Dial p={p} meta={meta} /></div>
               <div className="grid gap-5 sm:grid-cols-2 lg:col-span-7">
-                <Card label="Spread rate" value={fmtSpread(p.spread_rate_mm_s).replace(" mm/s", "")} unit="mm/s"
+                <Card label="Spread rate" value={<NumberTicker value={p.spread_rate_mm_s} format={(n) => fmtNum(n, 2)} />} unit="mm/s"
                   foot={<>Likely range {fmtCi(p.spread_rate_ci)} mm/s{p.ci_widened && <span className="ml-2 text-fire">· widened (sparse data)</span>}</>} />
-                <Card label="Flame survives?" value={fmtPct(survivalProbability(p.extinction_probability)).replace("%", "")} unit="%"
+                <Card label="Flame survives?" value={<NumberTicker value={survivalProbability(p.extinction_probability)} format={fmtPctNum} />} unit="%"
                   color="#FFB873" foot="Chance the flame keeps burning on its own" />
-                <Card label="Time to critical" value={fmtTtc(p.time_to_critical_s)} compact
+                <Card label="Time to critical" compact
+                  value={p.time_to_critical_s === null ? fmtTtc(null) : <NumberTicker value={p.time_to_critical_s} format={fmtTtc} />}
                   foot={meta ? `Time for the flame to travel ${meta.model.critical_length_mm} mm (illustrative)` : ""} />
-                <Card label="Matching runs" value={p.matching_runs} unit={p.matching_runs === 1 ? "run" : "runs"}
+                <Card label="Matching runs" value={<NumberTicker value={p.matching_runs} format={(n) => fmtNum(n, 0)} />} unit={p.matching_runs === 1 ? "run" : "runs"}
                   color={p.matching_runs === 0 ? "var(--fire)" : "var(--cool)"} tint={p.matching_runs === 0}
                   foot={p.matching_runs === 0 ? "0 — no similar experiments, the model is extrapolating" : "Experiments with similar conditions"} />
               </div>

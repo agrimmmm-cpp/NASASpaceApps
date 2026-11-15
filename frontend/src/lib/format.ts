@@ -24,3 +24,6 @@ export function fmtGravity(g: number | null | undefined): string {
 
 /** Decimal places implied by a range step (e.g. 0.5 → 1, 0.01 → 2), so slider labels follow meta.ranges. */
 export const dpForStep = (step: number) => Math.max(0, Math.ceil(-Math.log10(step) - 1e-9));
+
+/** Percentage number without the % sign (for KPI tiles that show the unit separately). */
+export const fmtPctNum = (p: number) => `${Math.round(p * 100)}`;

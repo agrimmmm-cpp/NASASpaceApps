@@ -234,6 +234,23 @@ def test_api_all_endpoints_validate_with_null_temperature(real_client):
     assert [e.material for e in p.entries] == ["methanol", "heptane"] and all(e.flame_temp_k is None for e in p.entries)
 
 
+def test_api_compare_uses_labelled_mock_reference_when_real_data_has_no_gravity(real_client):
+    """Real data is all 0 g, so for a material the mock data also has (heptane) /api/compare answers from the mock-trained
+    reference model and says so (data_source="mock", I-09). Nothing else changes source."""
+    import schemas
+
+    hep = {"material": "heptane", "o2_percent": 21.0, "pressure_kpa": 101.3, "airflow_cm_s": 0.0}
+    c = schemas.Compare.model_validate(real_client.post("/api/compare", json=hep).json())
+    assert c.data_source == "mock"
+    assert c.microgravity.flame_temp_k is not None and c.earth.flame_temp_k is not None    # mock reference has temperatures
+    assert c.microgravity.flame_temp_k < c.earth.flame_temp_k                                # 0 g cooler (sanity check 4)
+    # the simulated reference never leaks into anything else
+    assert real_client.post("/api/predict", json={**hep, "gravity_g": 0.0}).json()["data_source"] == "nasa"
+    assert real_client.get("/api/meta").json()["model"]["capabilities"]["gravity_effect"] is False
+    # a material the mock data doesn't have (methanol) keeps the real, gravity-blind answer
+    assert real_client.post("/api/compare", json={**hep, "material": "methanol"}).json()["data_source"] == "nasa"
+
+
 def test_api_heatmap_matches_predict_on_real_model(real_client):
     hm = real_client.post("/api/heatmap", json={"material": "methanol", "pressure_kpa": 85.0, "gravity_g": 0.0}).json()
     rnd = random.Random(2)
