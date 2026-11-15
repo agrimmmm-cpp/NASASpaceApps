@@ -188,7 +188,11 @@
       "extinction_auc": 0.95,
       "n_train": 400
     },
-    "stub": false
+    "stub": false,
+    "capabilities": {
+      "flame_temp": true,
+      "gravity_effect": true
+    }
   },
   "llm_enabled": false
 }

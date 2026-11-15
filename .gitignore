@@ -13,7 +13,6 @@ backend/models/*.joblib
 backend/data_report.json
 
 # data
-data/raw/
 
 # node
 node_modules/

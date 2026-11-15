@@ -1,0 +1,46 @@
+{
+  "scenario": {
+    "material": "methanol",
+    "o2_percent": 21.0,
+    "pressure_kpa": 101.3,
+    "airflow_cm_s": 0.0,
+    "gravity_g": 0.0
+  },
+  "spread_rate_mm_s": 0.5,
+  "spread_rate_ci": [
+    0.31,
+    0.66
+  ],
+  "ci_widened": false,
+  "flame_temp_k": null,
+  "extinction_probability": 0.78,
+  "risk_index": 38.2,
+  "risk_band": "elevated",
+  "time_to_critical_s": 200.0,
+  "shap": [
+    {
+      "feature": "o2_percent",
+      "contribution": -4.1
+    },
+    {
+      "feature": "pressure_kpa",
+      "contribution": 1.2
+    },
+    {
+      "feature": "material",
+      "contribution": 0.3
+    },
+    {
+      "feature": "airflow_cm_s",
+      "contribution": 0.0
+    },
+    {
+      "feature": "gravity_g",
+      "contribution": 0.0
+    }
+  ],
+  "shap_base": 40.0,
+  "matching_runs": 41,
+  "data_source": "nasa",
+  "model_version": "2026-11-15T04:08:04+00:00-bd0e608b"
+}

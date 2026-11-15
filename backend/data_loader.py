@@ -189,8 +189,10 @@ def load_csv(path: Path, source: str, schema: Optional[dict] = None,
     return Dataset(df=kept, source=source, path=path, sha256=digest, report=report)
 
 
-def load_dataset(real_csv: Path = config.REAL_CSV, mock_csv: Path = config.MOCK_CSV,
+def load_dataset(real_csv: Optional[Path] = None, mock_csv: Optional[Path] = None,
                  report_path: Optional[Path] = config.DATA_REPORT_JSON) -> Dataset:
+    real_csv = Path(real_csv) if real_csv else config.REAL_CSV     # resolved at call time (tests / tools may re-point config)
+    mock_csv = Path(mock_csv) if mock_csv else config.MOCK_CSV
     if Path(real_csv).exists():
         log.info("loading real data %s", real_csv)
         return load_csv(real_csv, "nasa", report_path=report_path)  # DataError propagates: no silent mock fallback (I-17)

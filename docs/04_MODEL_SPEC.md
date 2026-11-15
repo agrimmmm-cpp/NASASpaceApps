@@ -51,6 +51,17 @@ spend time tuning; spend it on checking behaviour (§8).
 - **Artifact:** `backend/models/model_<hash8>.joblib` containing models, encoder, column order, constants snapshot, metrics, trained_at.
   On startup: load if hash matches current data; else train (target < 20 s on mock). Train in a background thread; endpoints return 503 `MODEL_NOT_READY` until done.
 
+## 3b. Small and real datasets (added 2026-11-15)
+
+- **Hyper-parameters by size:** fewer than `SMALL_DATA_ROWS` (300) training rows use `GB_PARAMS_SMALL` (depth-1 stumps, 100 trees, `min_samples_leaf=10`);
+  larger data uses the settings above. Reason: on the real FLEX candidate (182 rows), repeated 5-fold CV gave spread R² 0.07 / extinction AUC 0.48 at depth 3
+  but 0.24 / 0.61 with stumps. The choice was made by comparing 5 settings on that CV, so the quoted score is slightly optimistic.
+- **Temperature is optional:** fewer than `MIN_TRAIN_ROWS` rows with `flame_temp_k` => no temperature model, `flame_temp_k` is `null`, `metrics.temp_r2` is `null`. Spread and extinction are mandatory.
+- **Minimum rows per material:** `MIN_MATERIAL_ROWS` (10). Thinner materials are not predictable (422 `UNKNOWN_MATERIAL`) but stay in `/api/runs` and citations.
+- **Capabilities** (`meta.model.capabilities`): `flame_temp` (a temperature model exists) and `gravity_effect` (>= `MIN_GRAVITY_ROWS` = 10 rows at g < 0.05 AND at g > 0.95).
+  When `gravity_effect` is false the model has no basis for any gravity dependence: `/api/compare` still answers but both sides are identical, and the UI must hide the comparison.
+- Real-data result (FLEX + Saffire-II, 182 training rows, methanol and heptane only): spread R² ≈ 0.22, extinction AUC ≈ 0.61. These are weak; the About modal must say so.
+
 ## 4. Prediction (`predict_batch(df_scenarios)`, I-16)
 
 1. Validate/encode. Unknown material → `UNKNOWN_MATERIAL`.
@@ -119,3 +130,4 @@ On **real** data these may not all hold; that is information, not a bug. Print p
 - 2026-11-14 initial.
 - 2026-11-15 (Track A) Tier 3 implemented (`llm.py`, `templates.py`, `ai.py`): rules above. Insights/ask now return `generated_by: "llm"` only when validated.
 - 2026-11-15 (Track A) Tier 2 implemented: no calibration wrapper; SHAP extinction part uses secant slope instead of tangent; artifact name `model_<hash8>_v<MODEL_CODE_VERSION>.joblib`; training in a background thread, 503 `MODEL_NOT_READY` until done.
+- 2026-11-15 (Track A) Section 3b: small-data hyper-parameters, optional temperature model, per-material minimum rows, capabilities.

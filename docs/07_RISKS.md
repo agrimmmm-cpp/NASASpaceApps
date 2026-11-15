@@ -58,5 +58,12 @@ Review this list at the end of each tier; add new ones as you hit them.
 - **R-36 — Over-claiming scientific or safety value in the pitch.** M · H · *Mitigate:* I-27, I-09; pitch language: "exploration and communication tool built on public research data"; list limitations ourselves before a judge does. [C]
 - **R-37 — Stub values drift from the real model, so frontend never sees real edge cases.** M · M · *Mitigate:* stub covers edge fixtures (`shap: []`, `null` TTC, `ci_widened`, `matching_runs: 0`) via a `?scenario` switch; integrate with the real model by end of Tier 2 at the latest. [A]
 
+## Real data (added 2026-11-15)
+
+- **R-38 — The real NASA dataset is narrow and the model on it is weak.** H · H · *Notice:* `meta.model.capabilities` false, spread R² ≈ 0.22, extinction AUC ≈ 0.61, 2 predictable materials, all 0 g, no temperature. · *Mitigate:* capabilities flags + null temperature + hidden Earth-vs-Space panel; the About modal states the metrics and that FLEX is droplet combustion; do not claim a gravity effect from real data; keep mock as the default for the full-feature demo, or label the real mode honestly. Never merge mock rows into the real file. [A, B, C]
+- **R-39 — Unit/meaning mismatch in `spread_rate_mm_s` for droplets (mm²/s burning-rate constant).** H · M · *Mitigate:* stated in every FLEX `source_note`, `SOURCES.md`, About modal; never compare droplet and solid values (R-05). [A, C]
+- **R-40 — Assumed values in real rows (FLEX airflow 0, Saffire-II pressure 100.6 kPa).** M · M · *Mitigate:* each is written in the row's `source_note` and `mapping_report.json`; revisit if a source states otherwise. [A]
+
 ## Changelog
 - 2026-11-14 initial.
+- 2026-11-15 R-38..R-40 (real data).

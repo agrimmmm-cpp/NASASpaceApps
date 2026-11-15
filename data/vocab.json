@@ -1,11 +1,45 @@
 {
   "_comment": "Canonical material ids (I-04). Adding a material = add it here. Meta lists only materials that are present in the data.",
   "materials": [
-    {"id": "PMMA",    "label": "PMMA (acrylic)",            "fuel_type": "solid"},
-    {"id": "Nomex",   "label": "Nomex fabric",              "fuel_type": "solid"},
-    {"id": "SIBAL",   "label": "Cotton-fiberglass (SIBAL)", "fuel_type": "solid"},
-    {"id": "heptane", "label": "n-Heptane",                 "fuel_type": "droplet"},
-    {"id": "ethanol", "label": "Ethanol",                   "fuel_type": "droplet"},
-    {"id": "methane", "label": "Methane (gas jet)",         "fuel_type": "gas"}
+    {
+      "id": "PMMA",
+      "label": "PMMA (acrylic)",
+      "fuel_type": "solid"
+    },
+    {
+      "id": "Nomex",
+      "label": "Nomex fabric",
+      "fuel_type": "solid"
+    },
+    {
+      "id": "SIBAL",
+      "label": "Cotton-fiberglass (SIBAL)",
+      "fuel_type": "solid"
+    },
+    {
+      "id": "heptane",
+      "label": "n-Heptane",
+      "fuel_type": "droplet"
+    },
+    {
+      "id": "ethanol",
+      "label": "Ethanol",
+      "fuel_type": "droplet"
+    },
+    {
+      "id": "methane",
+      "label": "Methane (gas jet)",
+      "fuel_type": "gas"
+    },
+    {
+      "id": "methanol",
+      "label": "Methanol (droplet)",
+      "fuel_type": "droplet"
+    },
+    {
+      "id": "silicone",
+      "label": "Silicone",
+      "fuel_type": "solid"
+    }
   ]
 }

@@ -91,6 +91,7 @@ interface Meta {
     weights: { spread: number; survival: number };   // 0.6 / 0.4
     critical_length_mm: number;         // used for time_to_critical (100)
     ci_widen: { g_min: number; g_max: number; factor: number };  // 0.05, 0.95, 1.5
+    capabilities: { flame_temp: boolean; gravity_effect: boolean };  // what the loaded data can support; UI hides temperature / Earth-vs-Space when false
     metrics: { spread_r2: number | null; temp_r2: number | null; extinction_auc: number | null; n_train: number | null };  // null = not available (no model yet / undefined)
     stub: boolean;
   };
@@ -156,7 +157,7 @@ interface Prediction {
   spread_rate_mm_s: number;
   spread_rate_ci: [number, number];         // [low, high], low ≤ spread ≤ high (I-15)
   ci_widened: boolean;                      // true when g in (0.05, 0.95) (I-21)
-  flame_temp_k: number;                     // added vs. original brief: needed by Earth-vs-Space panel
+  flame_temp_k: number | null;              // added vs. original brief. null when the loaded data has no temperature measurements (meta.model.capabilities.flame_temp = false)
   extinction_probability: number;           // 0–1, P(extinguish)  (I-05)
   risk_index: number;                       // 0–100
   risk_band: RiskBand;                      // derived server-side from meta.risk_bands
@@ -200,7 +201,7 @@ Body: `{ material, o2_percent, pressure_kpa, airflow_cm_s }`.
 interface CompareSide {
   gravity_g: number;                 // exactly 0.0 or 1.0
   spread_rate_mm_s: number;
-  flame_temp_k: number;
+  flame_temp_k: number | null;
   extinction_probability: number;
   risk_index: number;
 }
@@ -274,3 +275,4 @@ a short summary of the retrieved runs plus the prediction.
 ## Changelog
 - 2026-11-14 (Track A) `meta.model.metrics` fields are nullable (null in stub mode / before training). Frontend: show "—".
 - 2026-11-14 initial. Deviations from the original brief: added `/api/health`, `flame_temp_k` and `risk_band`/`shap_base`/`ci_widened`/`scenario` echo on predict; `/api/insights` body is `{scenario}` only; `material.id` canonical vs label.
+- 2026-11-15 (Track A) **UI-affecting:** `flame_temp_k` is `number | null` on Prediction, CompareSide and PassportEntry; `meta.model.capabilities {flame_temp, gravity_effect}` added. On mock data temperature is always a number and both capabilities are true; on the real NASA data (`data/SOURCES.md`) temperature is null and both are false. Fixtures: `*_real_data.json`.

@@ -88,6 +88,12 @@ Procedure:
 
 If real coverage is thin for some materials/gravities, that's fine: the CI-widening and "matching runs" count make the sparsity visible. Say so in the About modal.
 
+### Status (2026-11-15): pipeline built
+
+`make real-data` fetches PSI-69 (FLEX) and PSI-99 (Saffire-II), maps them (`data/mapping/psi_to_schema.py`) and writes `data/candidate/combustion_runs.csv`
+(190 rows, validated). It is **not active** until `make promote-real`. Sources, assumptions, rejected rows and unused investigations: `data/SOURCES.md`.
+Findings that change the product: all rows are 0 g, no flame temperature, only methanol and heptane have enough rows to predict. See `docs/04_MODEL_SPEC.md` section 3b.
+
 ## 5. Mock generator (`backend/mock_data.py`)
 
 Deterministic (`numpy.random.default_rng(20241014)`, I-13). ~400 rows. Mock exists to exercise the UI and model; it must be
@@ -119,3 +125,4 @@ The generator refuses to run if `data/combustion_runs.csv` exists (nothing to mo
 ## Changelog
 - 2026-11-14 initial.
 - 2026-11-14 (Track A) M-4 cell made precise (airflow < 3, O₂ ≤ 21); run_id prefixes for Ground/Saffire; mock generator oversamples low airflow and low O₂ so those cells have enough rows.
+- 2026-11-15 (Track A) Real-data pipeline and status; `data/vocab.json` gained `methanol` and `silicone`.
