@@ -6,12 +6,12 @@
 
 **NASA Space Apps Challenge 2026 · *Flame in Freefall***
 
-[**▶ Live demo**](LIVE_URL) · [**🎬 Demo video**](VIDEO_URL) · [How it works](#how-it-works) · [NASA data](#nasa-data) · [Run it locally](#quick-start)
+**▶ Live demo:** deploying soon · [**🎬 Demo video**](https://www.youtube.com/watch?v=hW-65ah_B58) · [How it works](#how-it-works) · [NASA data](#nasa-data) · [Run it locally](#quick-start)
 
-<a href="VIDEO_URL"><img src="docs/media/video-thumb.jpg" alt="▶ Watch the 2-minute demo of Fire Command: Zero-G" width="100%" /></a>
-<sub><b>▶ Click to watch the 2-minute demo</b> (narrated walkthrough: prediction → confidence → NASA research for a Moon base → fighting a fire)</sub>
+<a href="https://www.youtube.com/watch?v=hW-65ah_B58"><img src="docs/media/video-thumb.jpg" alt="▶ Watch the 2-minute demo of Fire Command: Zero-G" width="100%" /></a>
+<sub><b>▶ Click to watch the 2-minute demo on YouTube</b> (narrated walkthrough: prediction → confidence → NASA research for a Moon base → fighting a fire)</sub>
 
-<!-- To show an inline player on GitHub: edit this README on github.com and drag FireCommand-demo-small.mp4 (6 MB) right here. -->
+<sub>(no YouTube? <a href="docs/media/demo.mp4">play the video file here</a>)</sub>
 
 </div>
 
