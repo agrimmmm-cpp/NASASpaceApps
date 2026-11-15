@@ -78,3 +78,14 @@ select { appearance: none; }
   .skeleton, .progress-line, .flame-pulse, .twinkle { animation: none; }
 }
 @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* Mission report: hidden on screen, the only thing printed (components/MissionReport.tsx). */
+#mission-report-wrap { position: absolute; left: -10000px; top: 0; width: 820px; }
+@media print {
+  @page { margin: 12mm; }
+  html, body { background: #fff !important; }
+  .app-root > *:not(#mission-report-wrap) { display: none !important; }
+  #mission-report-wrap { position: static; width: auto; }
+  #mission-report { padding: 0; }
+  #mission-report table { border-collapse: collapse; }
+}

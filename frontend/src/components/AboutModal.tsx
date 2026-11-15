@@ -7,14 +7,14 @@ import {
   ABOUT_TITLE, ALWAYS_LIMITS, EXPERIMENTS, MODEL_TEXT, RISK_HELP, SCORE_HELP, SOURCES, SOURCES_NOTE, WHY_MICROGRAVITY,
 } from "../content/about";
 
-function verdict(v: number | null, weak: number, strong: number) {
+export function verdict(v: number | null, weak: number, strong: number) {
   if (v === null) return { word: "not available", color: "var(--text-dim)" };
   if (v < weak) return { word: "weak", color: "var(--fire-hot)" };
   if (v < strong) return { word: "moderate", color: "var(--fire)" };
   return { word: "strong", color: "var(--cool)" };
 }
 
-function dataLimits(meta: Meta): string[] {
+export function dataLimits(meta: Meta): string[] {
   const caps = meta.model.capabilities;
   const out: string[] = [];
   if (meta.data_source === "mock") out.push("This is MOCK data generated to look plausible — not real measurements. Switch to NASA data for real runs.");

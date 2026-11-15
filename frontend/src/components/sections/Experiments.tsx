@@ -9,6 +9,14 @@ import { PanelShell } from "../common/PanelShell";
 import { RunChip, SourceTags } from "../common/RunChip";
 import { rateLabel, type RateLabel } from "../../lib/units";
 import type { Meta, Prediction, Run, RunsResponse } from "../../types";
+import fabricPhoto from "../../assets/nasa/saffire-fabric.jpg";
+import plexiPhoto from "../../assets/nasa/saffire-plexiglass.jpg";
+
+// Real spacecraft fires from NASA's Saffire-IV (assets/nasa/CREDITS.md). Materials match ones in the app.
+const SAFFIRE_PHOTOS = [
+  { src: fabricPhoto, title: "Cotton-fiberglass fabric (SIBAL)", text: "A 40 cm sheet burning inside an empty Cygnus cargo ship. The orange flame front eats across the fabric; green is the test lighting." },
+  { src: plexiPhoto, title: "Plexiglass (PMMA)", text: "The plastic melts and vaporises; the bright balls are vapour burning as it bursts from the surface." },
+];
 
 const OUT = "#3DD9FF";   // went out
 const BURN = "#FF9A1F";  // kept burning (burned to completion)
@@ -30,7 +38,7 @@ const OUTCOME: Record<Outcome, { color: string; icon: string; legend: string }> 
 const colorOf = (r: Run) => OUTCOME[outcomeOf(r)].color;
 const fmtSec = (s: number | null) => (s === null ? null : s < 60 ? `${s.toFixed(s < 10 ? 1 : 0)} s` : `${Math.round(s / 60)} min`);
 
-function outcomeText(r: Run) {
+export function outcomeText(r: Run) {
   const d = fmtSec(r.burn_duration_s);
   switch (outcomeOf(r)) {
     case "out": return d ? `Went out after ${d}` : "Went out on its own";
@@ -266,6 +274,26 @@ export function Experiments() {
             skeleton={<div className="space-y-3">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-16" />)}</div>}>
             {() => <div className="space-y-3">{listed.map((r) => <ClosestRun key={r.run_id} r={r} rank={rankOf.get(r.run_id)!} rate={rate} maxBurn={maxBurn} />)}</div>}
           </PanelShell>
+        </div>
+
+        {/* real fires: NASA Saffire photos */}
+        <div className="mt-8">
+          <p className="label mb-3">Real fires in space · NASA Saffire-IV</p>
+          <div className="grid gap-5 md:grid-cols-2">
+            {SAFFIRE_PHOTOS.map((p) => (
+              <figure key={p.title} className="glass group overflow-hidden rounded-2xl">
+                <div className="relative h-52 overflow-hidden">
+                  <img src={p.src} alt={`${p.title} burning in NASA's Saffire-IV experiment`} loading="lazy"
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                  <span className="num absolute right-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white/80">Photo: NASA</span>
+                </div>
+                <figcaption className="p-4">
+                  <p className="font-semibold text-white">{p.title}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-dim">{p.text}</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
 
         {/* 3. insights + Ask Nova */}
