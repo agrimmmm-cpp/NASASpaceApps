@@ -1,7 +1,7 @@
 """Endpoint logic shared by stub and real modes. All predictions go through predictor.predict_batch (I-16)."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
@@ -26,6 +26,10 @@ class AppState:
     trained_at: str = "1970-01-01T00:00:00Z"
     metrics: Optional[dict] = None
     model_error: Optional[str] = None
+    # Simulated 0 g vs 1 g reference (mock-trained) used ONLY by /api/compare when the loaded data has no gravity
+    # contrast (capabilities.gravity_effect = false). Answers are labelled data_source="mock" (I-09).
+    gravity_ref: Optional[Predictor] = None
+    gravity_ref_materials: list = field(default_factory=list)
 
     @property
     def material_ids(self) -> list[str]:
@@ -106,7 +110,13 @@ def _batch_df(st: AppState, df: pd.DataFrame) -> pd.DataFrame:
 
 
 def compare(st: AppState, sc: dict) -> dict:
-    res = _batch(st, [{**sc, "gravity_g": 0.0}, {**sc, "gravity_g": 1.0}])
+    # Real data with no 1 g runs can't show a gravity effect; if a mock reference model knows this material, answer
+    # from it and say so (data_source="mock"). Otherwise both sides come from the loaded model (identical when it
+    # has no gravity basis) and the UI hides the comparison.
+    use_ref = (st.gravity_ref is not None and sc["material"] in st.gravity_ref_materials
+               and not data_capabilities(st.dataset.df)["gravity_effect"])
+    pred = st.gravity_ref if use_ref else st.predictor
+    res = pred.predict_batch(pd.DataFrame([{**sc, "gravity_g": 0.0}, {**sc, "gravity_g": 1.0}])[FEATURES])
 
     def side(i: int, g: float) -> dict:
         r = res.iloc[i]
@@ -114,7 +124,7 @@ def compare(st: AppState, sc: dict) -> dict:
                 "extinction_probability": float(r["extinction_probability"]), "risk_index": float(r["risk_index"])}
 
     return {"scenario": {k: sc[k] for k in ("material", "o2_percent", "pressure_kpa", "airflow_cm_s")},
-            "microgravity": side(0, 0.0), "earth": side(1, 1.0), "data_source": st.dataset.source}
+            "microgravity": side(0, 0.0), "earth": side(1, 1.0), "data_source": "mock" if use_ref else st.dataset.source}
 
 
 def passport(st: AppState, cond: dict) -> dict:

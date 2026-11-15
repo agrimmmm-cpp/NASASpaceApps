@@ -15,7 +15,7 @@ import errors
 import ai
 import model as model_mod
 import services
-from data_loader import load_dataset, records
+from data_loader import load_csv, load_dataset, records
 from errors import model_not_ready
 from predictor import ToyPredictor
 from schemas import (AdviseRequest, AdviseResponse, AskRequest, AskResponse, CompareRequest, Compare, Health, Heatmap,
@@ -44,11 +44,32 @@ def build_state() -> AppState:
 
 def _train_in_background(st: AppState) -> None:
     try:
-        st.predictor = model_mod.load_or_train(st.dataset, st.material_ids)
-        log.info("model ready: %s", st.predictor.version)
+        predictor = model_mod.load_or_train(st.dataset, st.material_ids)
     except Exception as e:  # health stays model_ready=false; the reason is in the logs and /api/health-adjacent state
         st.model_error = str(e)
         log.error("MODEL TRAINING FAILED: %s", e)
+        return
+    _load_gravity_reference(st)  # before publishing, so model_ready also means compare is final
+    st.predictor = predictor
+    log.info("model ready: %s", predictor.version)
+
+
+def _load_gravity_reference(st: AppState) -> None:
+    """When the loaded (real) data has no 0 g vs 1 g contrast, train/load the mock model as a SIMULATED reference for
+    /api/compare only. Never mixed into predictions, runs, insights or metrics; compare labels it data_source="mock"."""
+    if st.dataset.source == "mock" or services.data_capabilities(st.dataset.df)["gravity_effect"]:
+        return
+    try:
+        mock = load_csv(config.MOCK_CSV, "mock", report_path=None) if config.MOCK_CSV.exists() else None
+        if mock is None:
+            log.info("no mock CSV; Earth-vs-Space stays unavailable on this data")
+            return
+        mats = [m["id"] for m in services.build_materials(mock.df)]
+        st.gravity_ref = model_mod.load_or_train(mock, mats)
+        st.gravity_ref_materials = mats
+        log.info("simulated gravity reference ready (mock model) for compare: %s", mats)
+    except Exception as e:  # optional feature: compare falls back to the loaded model
+        log.warning("gravity reference unavailable: %s", e)
 
 
 @asynccontextmanager
