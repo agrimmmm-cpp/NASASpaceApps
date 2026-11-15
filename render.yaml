@@ -1,0 +1,25 @@
+# Render Blueprint for the FastAPI backend (https://render.com → New → Blueprint → pick this repo).
+# The NASA data file is the committed, validated candidate; it is copied into place at build time so the
+# deployed API runs on NASA DATA (same file as local data/combustion_runs.csv).
+services:
+  - type: web
+    name: fire-command-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && cp ../data/candidate/combustion_runs.csv ../data/combustion_runs.csv
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: STUB_MODE
+        value: "0"
+      - key: LLM_PROVIDER
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false

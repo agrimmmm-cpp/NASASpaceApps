@@ -15,6 +15,9 @@ import { AstronautChat } from "./components/astronaut/AstronautChat";
 import { AboutModal } from "./components/AboutModal";
 import { MissionReport, printReport } from "./components/MissionReport";
 import { CommandMode } from "./components/command/CommandMode";
+import { Investigations } from "./components/sections/Investigations";
+import { StartHere } from "./components/sections/StartHere";
+import { HowItWorks } from "./components/sections/HowItWorks";
 import { NasaMissions } from "./components/sections/NasaMissions";
 import { CommandTeaser } from "./components/command/CommandTeaser";
 
@@ -48,12 +51,15 @@ export default function App() {
       <main className="relative z-10">
         {/* each section is isolated (I-22) */}
         <ErrorBoundary name="hero"><Hero /></ErrorBoundary>
+        <ErrorBoundary name="start-here" fallback={null}><StartHere /></ErrorBoundary>
         <ErrorBoundary name="gravity"><Gravity /></ErrorBoundary>
         <ErrorBoundary name="status"><Status /></ErrorBoundary>
         <ErrorBoundary name="danger"><Danger /></ErrorBoundary>
         <ErrorBoundary name="compare"><Compare /></ErrorBoundary>
         <ErrorBoundary name="passport"><Passport /></ErrorBoundary>
         <ErrorBoundary name="experiments"><Experiments /></ErrorBoundary>
+        <ErrorBoundary name="investigations"><Investigations /></ErrorBoundary>
+        <ErrorBoundary name="how" fallback={null}><HowItWorks /></ErrorBoundary>
         <ErrorBoundary name="nasa-missions" fallback={null}><NasaMissions /></ErrorBoundary>
         <ErrorBoundary name="command-teaser" fallback={null}><CommandTeaser /></ErrorBoundary>
       </main>

@@ -406,6 +406,21 @@ export default function GameView(p: GameViewProps) {
         </div>
       </div>
 
+      {/* touch controls (phones/tablets have no keyboard): tap to act, hold the screen to spray */}
+      {running && (
+        <div className="pointer-events-auto absolute inset-x-0 bottom-24 flex justify-center gap-2 px-3 [@media(hover:hover)_and_(pointer:fine)]:hidden">
+          {([["ext", game.equipped ? "🧯 In hand" : "🧯 Grab"], ["fan", game.fansOn ? "🌀 Fans off" : "🌀 Fans on"], ["valve", game.lowering ? "🫁 O₂ normal" : "🫁 Lower O₂"], ["hatch", armHatch ? "🚪 Confirm" : "🚪 Evacuate"]] as [Equip, string][]).map(([k, label]) => (
+            <button key={k} onPointerDown={(e) => e.stopPropagation()} onClick={() => operate(k)} disabled={k === "ext" && game.equipped}
+              className={`num rounded-xl border px-3 py-2 text-[12px] font-semibold backdrop-blur-0 ${k === "hatch" && armHatch ? "border-danger bg-danger/30 text-white" : "border-white/25 bg-black/70 text-white"} disabled:opacity-50`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {running && game.equipped && (
+        <div className="num pointer-events-none absolute inset-x-0 bottom-40 text-center text-[11px] text-white/70 [@media(hover:hover)_and_(pointer:fine)]:hidden">Hold your finger on the flames to spray</div>
+      )}
+
       {/* ---- debrief ---- */}
       {!running && <Debrief game={game} best={best} newBest={newBest} onAgain={p.onExit} />}
     </div>
