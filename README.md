@@ -1,11 +1,100 @@
-# FIRE COMMAND: ZERO-G
+<div align="center">
 
-AI-powered microgravity fire-safety dashboard (NASA Space Apps, "Flame in Freefall"). Configure a spacecraft scenario, see predicted
-fire behaviour and risk, explore the NASA combustion runs behind the predictions, and read grounded AI insights.
+# 🔥 Fire Command: Zero-G
 
-> Research and education demo. Not for operational fire-safety decisions.
+### AI-powered fire safety from NASA's microgravity combustion experiments
 
-**Planning docs live in [`docs/`](docs/00_START_HERE.md)** (contracts, invariants, risks, task board). Read those before changing anything shared.
+**NASA Space Apps Challenge 2026 · *Flame in Freefall***
+
+[**▶ Live demo**](LIVE_URL) · [**🎬 Demo video**](VIDEO_URL) · [How it works](#how-it-works) · [NASA data](#nasa-data) · [Run it locally](#quick-start)
+
+<img src="docs/media/hero.jpg" alt="Fire Command: Zero-G — spacecraft, material and atmosphere controls over a 3D Earth" width="100%" />
+
+</div>
+
+---
+
+On Earth a flame is a flickering teardrop. In orbit, with no buoyancy, it becomes a **dim blue sphere** that lives on diffusion alone — and NASA has spent decades lighting fires in space to learn how they start, spread and die.
+That knowledge is scattered across dozens of investigations. **Fire Command: Zero-G turns it into answers**: pick a habitat — the ISS, the Artemis Gateway, a Moon base, a Mars transit ship — and see which NASA research matters there, what a fire would do, how sure we are, and what would make it safer.
+
+> Research and education tool built on public NASA data. Not operational fire-safety guidance.
+
+<div align="center">
+<img src="docs/media/game.gif" alt="Command Mode: grabbing the CO₂ extinguisher and fighting a fire in a 3D station module" width="100%" />
+<sub><b>Command Mode</b> — a real-time fire in a 3D station module. How fast the flame grows comes from the model trained on NASA data.</sub>
+</div>
+
+## ✅ How it answers the challenge
+
+The challenge: *an SI-powered web dashboard that **summarizes, ranks and interprets** combustion science investigations to deliver fire-safety insights.*
+
+| The challenge asks… | Fire Command: Zero-G |
+|---|---|
+| **Summarize** investigations | 12 PSI investigations (BASS, Saffire, SAME, DAFT, FLEX, FLEX-2, CFI, ACME's BRE / CFI-G / E-FIELD, SPICE, SLICE): what each studied, hardware, fuel samples, measurements, and an **AI summary** on demand |
+| **Rank** them | Ranked by relevance to a chosen habitat's **oxygen, pressure, airflow and gravity** — every placement shows *why* |
+| **Interpret** them | Machine-learning predictions from **190 real NASA runs**, plain-language risk drivers, a *safer option*, and a **"How sure are we?"** meter |
+| Habitats: spacecraft, stations, Moon/Mars bases, rovers | ISS · Artemis Gateway · Lunar Habitat (34 % O₂, 56.5 kPa) · Mars Transit · or your own settings |
+| Extract data for predictive modeling | One-click **CSV download** of every run behind the model |
+| Research for next-gen safety equipment | Every investigation tagged **🛡 Prevention · 🚨 Detection · 🧯 Suppression**, with what it informs (detectors, cabin materials, extinguishing agents) |
+| Fire safety on Earth | NASA spin-offs: fine-water-mist extinguishers, smoke detection, firefighter gear |
+| Partial gravity | Handled honestly: PSI has **no** partial-gravity data, so Moon/Mars values are interpolated, flagged, and given wider ranges |
+
+## 🛰 What's inside
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/research-top.jpg" alt="Research: NASA investigations ranked for the Lunar Habitat" /><br/><b>Which NASA research matters for your habitat?</b><br/>Pick a habitat; investigations re-rank with a reason. Filter by prevention / detection / suppression, compare two side by side, ask Nova.</td>
+<td width="50%"><img src="docs/media/confidence.jpg" alt="How sure are we? confidence meter" /><br/><b>How sure are we?</b><br/>Real runs nearby, width of the likely range, and the model's held-out accuracy — with a one-click <i>Jump to real data</i>.</td>
+</tr>
+<tr>
+<td><img src="docs/media/danger.jpg" alt="Danger zone risk map" /><br/><b>Danger zone</b><br/>A risk map across oxygen × airflow, a plain verdict ("Caution, 45/100"), what's pushing the risk, and a safer option to try.</td>
+<td><img src="docs/media/gravity.jpg" alt="Gravity: flame shape from Earth to microgravity" /><br/><b>No gravity, no rising flame</b><br/>Slide from Earth to orbit and watch the flame morph from teardrop to sphere, next to a real NASA microgravity photo.</td>
+</tr>
+<tr>
+<td><img src="docs/media/how.jpg" alt="How it works pipeline" /><br/><b>How it works</b><br/>From NASA tables to an answer you can check — with the real numbers, the checks we did, and what the data can't tell you.</td>
+<td><img src="docs/media/command-brief.jpg" alt="Command Mode briefing" /><br/><b>Command Mode</b><br/>A first-person fire emergency: grab the extinguisher, aim, and stop the fire before it spreads to the racks. Three difficulty levels.</td>
+</tr>
+</table>
+
+Plus **Nova**, a 3D astronaut assistant (Gemini, with voice) that answers questions **citing real NASA run IDs**; a downloadable **fire-safety report**; and a **1-minute tour** for first-time visitors. Works on phones.
+
+## How it works
+
+```
+NASA PSI tables ──► validate & map ──► gradient-boosting models ──► API ──► dashboard
+ FLEX  274 rows        reject, never        burning/spread rate          FastAPI     React + three.js
+ Saffire-II 9 rows      adjust: 190 kept     + likely range               /api/*      Nova (Gemini, cites runs)
+                                            extinction probability
+                                            SHAP explanations
+```
+
+1. **Real NASA data.** FLEX (PSI-69, droplet flames on the ISS: 182 runs used) and Saffire-II (PSI-99, large material fires in a Cygnus cargo ship: 8 used). Rows outside the app's ranges are rejected, never adjusted.
+2. **Facts checked.** FLEX burning rate is in mm²/s (confirmed in NASA NTRS 20120016855); Saffire-II's cabin was 22.1 % O₂ at 100.6 kPa (Olson et al. 2019).
+3. **Model.** Gradient boosting predicts the burning/spread rate (with 10–90 % quantile range) and the chance a flame goes out; cross-validated scores are published at `/api/meta` and shown in the app.
+4. **Explained.** SHAP turns each prediction into "oxygen pushes risk up noticeably (+5)".
+5. **AI, grounded.** For every question the 5 most similar real runs are retrieved and Gemini answers from them, citing run IDs (validated). No key or no internet → deterministic templates; the app never breaks.
+
+### Honest limits
+- Every run is in **microgravity**, so the model has no learned gravity effect; Moon/Mars values are interpolated and labelled.
+- Held-out accuracy is **modest** (rate R² ≈ 0.22, extinction AUC ≈ 0.61) — the app shows this rather than hiding it.
+- Only FLEX and Saffire-II have tables that can train a model; the other investigations are catalogued (with links and the reason) in Research.
+- Command Mode's spreading, extinguisher and scoring are **game rules**, clearly labelled.
+
+## NASA data
+| | Investigation | Source |
+|---|---|---|
+| 🔥 | FLEX — Flame Extinguishment Experiment | [PSI-69 · doi:10.60555/mbq8-0451](https://doi.org/10.60555/mbq8-0451) |
+| 🔥 | Saffire-II — Spacecraft Fire Safety Demonstration | [PSI-99 · doi:10.60555/2chp-m469](https://doi.org/10.60555/2chp-m469) |
+| 📄 | Methanol droplet extinction in microgravity | [NASA NTRS 20120016855](https://ntrs.nasa.gov/api/citations/20120016855/downloads/20120016855.pdf) |
+| 📋 | Investigation descriptions | [2026 Space Apps challenge statement](https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/) |
+
+Data is CC0 (public domain). Provenance, hashes and every assumption: [`data/SOURCES.md`](data/SOURCES.md). Images: NASA ([credits](frontend/src/assets/nasa/CREDITS.md)).
+
+**Built with** React · TypeScript · Vite · Tailwind · three.js / react-three-fiber · Zustand · FastAPI · scikit-learn · SHAP · Google Gemini.
+
+---
+
+# For developers
 
 ## Quick start
 
