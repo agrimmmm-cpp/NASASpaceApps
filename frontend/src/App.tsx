@@ -11,6 +11,7 @@ import { Danger } from "./components/sections/Danger";
 import { Compare } from "./components/sections/Compare";
 import { Experiments, RunDrawer } from "./components/sections/Experiments";
 import { AstronautChat } from "./components/astronaut/AstronautChat";
+import { AboutModal } from "./components/AboutModal";
 
 export default function App() {
   const init = useStore((s) => s.init);
@@ -45,9 +46,11 @@ export default function App() {
       </main>
       <ErrorBoundary name="astronaut-chat" fallback={null}><AstronautChat /></ErrorBoundary>
       <RunDrawer />
+      <ErrorBoundary name="about" fallback={null}><AboutModal /></ErrorBoundary>
       <footer className="num relative z-10 border-t border-white/10 bg-[var(--space)]/80 px-6 py-4 text-center text-[12px] text-dim">
         Research and education demo — not operational fire-safety guidance.
-        {meta.data && ` Data: ${meta.data.data_source === "nasa" ? "NASA experiment runs" : "mock runs (real NASA data coming)"} · ${meta.data.n_runs} runs.`}
+        {meta.data && ` Data: ${meta.data.data_source === "nasa" ? "NASA experiment runs" : "mock runs (real NASA data coming)"} · ${meta.data.n_runs} runs. `}
+        <button onClick={() => useStore.getState().setAboutOpen(true)} className="text-cool underline-offset-2 hover:underline">About the data</button>
       </footer>
     </div>
   );

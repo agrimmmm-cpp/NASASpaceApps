@@ -6,6 +6,7 @@ import { fmtCi, fmtNum, fmtPctNum, fmtRisk, fmtTtc } from "../../lib/format";
 import { survivalProbability } from "../../lib/survival";
 import { PanelShell } from "../common/PanelShell";
 import { NumberTicker } from "../common/NumberTicker";
+import { rateLabel } from "../../lib/units";
 import type { Meta, Prediction } from "../../types";
 
 function Dial({ p, meta }: { p: Prediction; meta: Meta | null }) {
@@ -53,6 +54,8 @@ export function Status() {
   const state = useStore((s) => s.prediction);
   const meta = useStore((s) => s.meta.data);
   const retry = useStore((s) => s.retry);
+  const material = useStore((s) => s.material);
+  const rate = rateLabel(meta?.data_source, meta?.materials.find((m) => m.id === material)?.fuel_type);
   return (
     <section id="status" className="relative z-10 flex min-h-screen flex-col justify-center px-6 py-24 md:px-12">
       <div className="mx-auto w-full max-w-6xl">
@@ -69,8 +72,8 @@ export function Status() {
             <div className="grid items-center gap-8 lg:grid-cols-12">
               <div className="glass rounded-2xl p-8 lg:col-span-5"><Dial p={p} meta={meta} /></div>
               <div className="grid gap-5 sm:grid-cols-2 lg:col-span-7">
-                <Card label="Spread rate" value={<NumberTicker value={p.spread_rate_mm_s} format={(n) => fmtNum(n, 2)} />} unit="mm/s"
-                  foot={<>Likely range {fmtCi(p.spread_rate_ci)} mm/s{p.ci_widened && <span className="ml-2 text-fire">· widened (sparse data)</span>}</>} />
+                <Card label={rate.name} value={<NumberTicker value={p.spread_rate_mm_s} format={(n) => fmtNum(n, 2)} />} unit={rate.unit}
+                  foot={<>Likely range {fmtCi(p.spread_rate_ci)} {rate.unit}{p.ci_widened && <span className="ml-2 text-fire">· widened (sparse data)</span>}</>} />
                 <Card label="Flame survives?" value={<NumberTicker value={survivalProbability(p.extinction_probability)} format={fmtPctNum} />} unit="%"
                   color="#FFB873" foot="Chance the flame keeps burning on its own" />
                 <Card label="Time to critical" compact
