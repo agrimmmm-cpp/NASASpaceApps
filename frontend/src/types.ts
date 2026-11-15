@@ -202,3 +202,18 @@ export interface Passport {
   entries: PassportEntry[];
   data_source: DataSource;
 }
+
+// ---- /api/advise (Command Mode) ----
+export interface AdviseRequest {
+  scenario: Scenario;
+  t_s: number;
+  state: { spread_rate_mm_s: number; extinction_probability: number; risk_index: number };
+  options: string[];
+}
+export interface AdviseResponse {
+  recommended_action_id: string;
+  justification: string;
+  cited_run_ids: string[];
+  generated_by: string;
+  data_source: DataSource;
+}
