@@ -8,7 +8,10 @@
 
 [**▶ Live demo**](LIVE_URL) · [**🎬 Demo video**](VIDEO_URL) · [How it works](#how-it-works) · [NASA data](#nasa-data) · [Run it locally](#quick-start)
 
-<img src="docs/media/hero.jpg" alt="Fire Command: Zero-G — spacecraft, material and atmosphere controls over a 3D Earth" width="100%" />
+<a href="VIDEO_URL"><img src="docs/media/video-thumb.jpg" alt="▶ Watch the 2-minute demo of Fire Command: Zero-G" width="100%" /></a>
+<sub><b>▶ Click to watch the 2-minute demo</b> (narrated walkthrough: prediction → confidence → NASA research for a Moon base → fighting a fire)</sub>
+
+<!-- To show an inline player on GitHub: edit this README on github.com and drag FireCommand-demo-small.mp4 (6 MB) right here. -->
 
 </div>
 
@@ -18,6 +21,8 @@ On Earth a flame is a flickering teardrop. In orbit, with no buoyancy, it become
 That knowledge is scattered across dozens of investigations. **Fire Command: Zero-G turns it into answers**: pick a habitat — the ISS, the Artemis Gateway, a Moon base, a Mars transit ship — and see which NASA research matters there, what a fire would do, how sure we are, and what would make it safer.
 
 > Research and education tool built on public NASA data. Not operational fire-safety guidance.
+
+<img src="docs/media/hero.jpg" alt="Fire Command: Zero-G — spacecraft, material and atmosphere controls over a 3D Earth" width="100%" />
 
 <div align="center">
 <img src="docs/media/game.gif" alt="Command Mode: grabbing the CO₂ extinguisher and fighting a fire in a 3D station module" width="100%" />
